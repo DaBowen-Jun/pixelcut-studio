@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.workbuddy/
+*.log
+server.js
+package.json
+package-lock.json
