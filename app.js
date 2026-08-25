@@ -28,27 +28,49 @@ const formatSel = $('format');
 
 let sourceImage = null;
 
-// ---------- Fiverr 联盟营销（审核通过后替换 PLACEHOLDER_ID 为真实 a_id） ----------
-const FIVERR_AFFILIATE_ID = 'YOUR_FIVERR_ID';  // ← 审核通过后用 sed 替换即可
-const FIVERR_AFF_ENABLED = FIVERR_AFFILIATE_ID !== 'YOUR_FIVERR_ID';
+// ---------- 联盟营销（双线）：中文 → 淘宝联盟，英文 → AppSumo ----------
+// 中文用户 → 淘宝联盟（阿里妈妈 pub.alimama.com）
+//   PID 形如 mm_xxx_xxx_xxx；纯前端无法自动转链，默认用公开搜索页（不带佣金）。
+//   开通 PID 后，把 TAOBAO_PROMO_BASE 改成阿里妈妈后台「带 PID 的 uland 链接」，并在其中用 {q} 作为关键词占位即可拿到佣金。
+const TAOBAO_PROMO_BASE = 'https://s.taobao.com/search?q='; // ← 开通后换成 uland.taobao.com/...?pid=mm_xxx&q={q}
+const TAOBAO_ENABLED = !TAOBAO_PROMO_BASE.includes('YOUR_TAOBAO');
+
+// 英文用户 → AppSumo（appsumo.com/partners）
+//   审核通过后在 dashboard 拿到 referral code（appsumo.com/r/XXXX 的 XXXX）
+const APPSUMO_REF = 'YOUR_APPSUMO_REF';
+const APPSUMO_ENABLED = APPSUMO_REF !== 'YOUR_APPSUMO_REF';
 
 // 根据用户生成的风格，匹配 Fiverr 上最适合的设计师品类（更高转化）
-const FIVERR_STYLE_QUERIES = {
-  neon:    { query: 'neon+pixel+art',         cta_zh: '找设计师把霓虹肖像做成动态 GIF', cta_en: 'Hire a designer to animate this neon portrait' },
-  pop:     { query: 'pop+art+illustration',    cta_zh: '委托艺术家把这张做成限量海报',   cta_en: 'Commission a limited-edition poster of this' },
-  cyber:   { query: 'cyberpunk+illustration',  cta_zh: '雇佣赛博朋克插画师扩展世界观',   cta_en: 'Hire a cyberpunk illustrator to expand the world' },
-  ink:     { query: 'ink+illustration',        cta_zh: '找水墨插画师出品同款艺术微喷',   cta_en: 'Order a giclée print of this ink style' },
-  vintage: { query: 'retro+illustration',     cta_zh: '委托艺术家做成复古胶片影集',     cta_en: 'Commission a retro photo-album edition' },
-  thermal: { query: 'digital+art+commission',  cta_zh: '找数字艺术家定制热成像 NFT',     cta_en: 'Commission a thermal-style NFT' }
+// 中文：淘宝搜索关键词（按风格唤起定制 / 周边）
+const TAOBAO_STYLE_KEYWORDS = {
+  neon:    '像素风霓虹插画定制',
+  pop:     '波普艺术海报定制',
+  cyber:   '赛博朋克插画定制',
+  ink:     '水墨插画定制',
+  vintage: '复古风插画定制',
+  thermal: '数字艺术定制'
+};
+// 英文：AppSumo 推荐的具体产品（按风格匹配设计工具）
+const APPSUMO_STYLE_SLUGS = {
+  neon:    'canva',
+  pop:     'canva',
+  cyber:   'figma',
+  ink:     'kittl',
+  vintage: 'envato-elements',
+  thermal: 'design'
 };
 
-function buildFiverrUrl(query) {
-  return `https://www.fiverr.com/search/gigs?query=${query}&a_id=${FIVERR_AFFILIATE_ID}`;
+function buildTaobaoUrl(kw) {
+  if (TAOBAO_PROMO_BASE.includes('{q}')) return TAOBAO_PROMO_BASE.replace('{q}', encodeURIComponent(kw));
+  return TAOBAO_PROMO_BASE + encodeURIComponent(kw);
+}
+function buildAppSumoUrl() {
+  return `https://appsumo.com/r/${APPSUMO_REF}`; // 通用归因链接，覆盖全部产品
 }
 
 // 追踪联盟点击（送到 Clarity + console 留痕）
 function trackAffiliateClick(label) {
-  try { window.clarity && window.clarity('set', 'fiverr_click', label); } catch (e) {}
+  try { window.clarity && window.clarity('set', 'aff_click', label); } catch (e) {}
   console.log('[affiliate]', label);
 }
 
@@ -98,13 +120,7 @@ const I18N = {
     'sponsor.label': '赞助内容 · Sponsored',
     'sponsor.fallback.t': '想在这里展示你的产品？',
     'sponsor.fallback.d': '面向设计/开发者人群，CPM $3-$8，无中间商抽佣。',
-    'sponsor.fallback.cta': '联系投放',
-    'aff.badge': '推荐服务 · Recommended',
-    'aff.t': '想把作品升级？',
-    'aff.cta': '前往 Fiverr →',
-    'footer.aff.t': '想把这张头像做成周边？',
-    'footer.aff.d': 'Fiverr 上 5 万 + 设计师帮你出贴纸/T恤/动画',
-    'footer.aff.cta': '找设计师 ›'
+    'sponsor.fallback.cta': '联系投放'
   },
   en: {
     brand: 'PixelCut Studio',
@@ -150,13 +166,7 @@ const I18N = {
     'sponsor.label': 'Sponsored',
     'sponsor.fallback.t': 'Want to show your product here?',
     'sponsor.fallback.d': 'Reach designers & devs. CPM $3–$8, no middleman.',
-    'sponsor.fallback.cta': 'Book ad slot',
-    'aff.badge': 'Recommended',
-    'aff.t': 'Want to take it further?',
-    'aff.cta': 'See Fiverr designers →',
-    'footer.aff.t': 'Turn this avatar into merch?',
-    'footer.aff.d': '50,000+ Fiverr designers for stickers, tees, animations',
-    'footer.aff.cta': 'Find a designer ›'
+    'sponsor.fallback.cta': 'Book ad slot'
   }
 };
 
@@ -273,38 +283,51 @@ function generate() {
   }, 30);
 }
 
-// 渲染联盟卡片：用户生成完成 → 推荐相关品类 Fiverr 设计师
+// 渲染联盟卡片：用户生成完成 → 按当前语言推荐 淘宝 / AppSumo
 function renderAffiliateCard(style) {
-  if (!FIVERR_AFF_ENABLED) return;
   const slot = $('affiliateSlot');
   if (!slot) return;
-  const m = FIVERR_STYLE_QUERIES[style] || { query: 'pixel+art', cta_zh: '找设计师继续创作', cta_en: 'Hire a designer to keep creating' };
-  const cta = currentLang === 'zh' ? m.cta_zh : m.cta_en;
-  const url = buildFiverrUrl(m.query);
-
+  const isZh = currentLang === 'zh';
+  let url, badge, title, text, cta, icon, affKey;
+  if (isZh) {
+    const kw = TAOBAO_STYLE_KEYWORDS[style] || '像素风插画定制';
+    url = buildTaobaoUrl(kw);
+    badge = '推荐 · 淘宝';
+    title = '想进阶创作？';
+    text = '淘宝上找插画师做同款周边 / 定制';
+    cta = '去淘宝看看 ›';
+    icon = '🛒';
+    affKey = 'taobao:' + kw;
+  } else {
+    const slug = APPSUMO_STYLE_SLUGS[style] || 'canva';
+    url = buildAppSumoUrl(slug);
+    badge = 'Recommended · AppSumo';
+    title = 'Level up your art?';
+    text = 'Find design tools & lifetime deals on AppSumo';
+    cta = 'Explore AppSumo ›';
+    icon = '🚀';
+    affKey = 'appsumo:' + slug;
+  }
   slot.innerHTML = `
     <div class="affiliate-card">
-      <span class="affiliate-card__badge" data-i18n="aff.badge">推荐服务 · Recommended</span>
+      <span class="affiliate-card__badge">${badge}</span>
       <div class="affiliate-card__body">
-        <span class="affiliate-card__icon" aria-hidden="true">🎨</span>
+        <span class="affiliate-card__icon" aria-hidden="true">${icon}</span>
         <div class="affiliate-card__text">
-          <strong data-i18n="aff.t">想把作品升级？</strong>
-          <span>${escapeHtml(cta)}</span>
+          <strong>${title}</strong>
+          <span>${text}</span>
         </div>
         <a class="btn btn--primary btn--sm"
            href="${url}"
            target="_blank"
            rel="sponsored noopener"
            data-affiliate="result"
-           data-aff-query="${m.query}">
-           <span data-i18n="aff.cta">前往 Fiverr →</span>
+           data-aff-query="${affKey}">
+           ${cta}
         </a>
       </div>
     </div>
   `;
-  localizeElement(slot);
-
-  // 一次事件代理：拦截所有联盟链接点击用于统计
   slot.querySelectorAll('a[data-affiliate]').forEach(a => {
     a.addEventListener('click', () => {
       trackAffiliateClick(`${a.dataset.affiliate}:${a.dataset.affQuery}`);
@@ -317,29 +340,37 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// 加载页脚联盟横条（始终展示，不影响主功能）
+// 加载页脚联盟横条（始终展示，按语言分流 淘宝 / AppSumo）
 function renderFooterAffiliateBar() {
-  if (!FIVERR_AFF_ENABLED) return;
   const slot = $('footerAffiliateBar');
   if (!slot) return;
-  const url = buildFiverrUrl('pixel+art+designer');
+  const isZh = currentLang === 'zh';
+  let url, text, cta, affKey;
+  if (isZh) {
+    url = buildTaobaoUrl('像素风周边定制');
+    text = '把这张头像做成贴纸 / T恤 / 手机壳？';
+    cta = '去淘宝找定制 ›';
+    affKey = 'taobao:merch';
+  } else {
+    url = buildAppSumoUrl('design');
+    text = 'Turn this into stickers, tees & merch on AppSumo';
+    cta = 'Explore AppSumo ›';
+    affKey = 'appsumo:merch';
+  }
   slot.innerHTML = `
     <div class="aff-bar">
       <span class="aff-bar__dot"></span>
       <span class="aff-bar__text">
-        <strong data-i18n="footer.aff.t">想把这张头像做成周边？</strong>
-        <span data-i18n="footer.aff.d">Fiverr 上 5 万 + 设计师帮你出贴纸/T恤/动画</span>
+        <strong>${text}</strong>
       </span>
       <a class="aff-bar__cta"
          href="${url}"
          target="_blank"
          rel="sponsored noopener"
          data-affiliate="footer"
-         data-aff-query="pixel+art+designer"
-         data-i18n="footer.aff.cta">找设计师 ›</a>
+         data-aff-query="${affKey}">${cta}</a>
     </div>
   `;
-  localizeElement(slot);
   slot.querySelector('a[data-affiliate]').addEventListener('click', e => {
     trackAffiliateClick(`${e.currentTarget.dataset.affiliate}:${e.currentTarget.dataset.affQuery}`);
   });
@@ -801,6 +832,7 @@ function applyLang(lang) {
   });
   // 重新渲染联盟卡片（语言切换后保持推荐语一致）
   refreshAffiliateCards();
+  renderFooterAffiliateBar();
   // 风格下拉文案
   for (const opt of styleSel.options) {
     const k = opt.value;
