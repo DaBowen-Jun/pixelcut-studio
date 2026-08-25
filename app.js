@@ -302,7 +302,7 @@ function renderAffiliateCard(style) {
       </div>
     </div>
   `;
-  applyLang(currentLang);
+  localizeElement(slot);
 
   // 一次事件代理：拦截所有联盟链接点击用于统计
   slot.querySelectorAll('a[data-affiliate]').forEach(a => {
@@ -339,7 +339,7 @@ function renderFooterAffiliateBar() {
          data-i18n="footer.aff.cta">找设计师 ›</a>
     </div>
   `;
-  applyLang(currentLang);
+  localizeElement(slot);
   slot.querySelector('a[data-affiliate]').addEventListener('click', e => {
     trackAffiliateClick(`${e.currentTarget.dataset.affiliate}:${e.currentTarget.dataset.affQuery}`);
   });
@@ -777,6 +777,17 @@ function spawnDecorPixels() {
 spawnDecorPixels();
 
 // ---------- 国际化：应用语言 ----------
+// 仅翻译某个元素内部带 data-i18n / data-i18n-html 的节点（避免全页 applyLang 递归）
+function localizeElement(el) {
+  if (!el) return;
+  el.querySelectorAll('[data-i18n]').forEach((node) => {
+    node.textContent = t(node.getAttribute('data-i18n'));
+  });
+  el.querySelectorAll('[data-i18n-html]').forEach((node) => {
+    node.innerHTML = t(node.getAttribute('data-i18n-html'));
+  });
+}
+
 function applyLang(lang) {
   currentLang = lang;
   if (typeof localStorage !== 'undefined') localStorage.setItem('pc_lang', lang);
