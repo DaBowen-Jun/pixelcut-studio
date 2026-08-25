@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0b0d1a"/>
+      <stop offset="100%" style="stop-color:#1a1040"/>
+    </linearGradient>
+  </defs>
+  <!-- 背景 -->
+  <rect width="64" height="64" rx="12" fill="url(#bg)"/>
+  <!-- 3x3 像素块 logo（核心识别符号，对应 OG 封面元素） -->
+  <g>
+    <rect x="12" y="12" width="12" height="12" rx="2" fill="#ff2e93"/>
+    <rect x="26" y="12" width="12" height="12" rx="2" fill="#00e5ff"/>
+    <rect x="40" y="12" width="12" height="12" rx="2" fill="#ffd23f"/>
+    <rect x="12" y="26" width="12" height="12" rx="2" fill="#00ffc8"/>
+    <rect x="26" y="26" width="12" height="12" rx="2" fill="#7928ff"/>
+    <rect x="40" y="26" width="12" height="12" rx="2" fill="#ff4fa3"/>
+    <rect x="12" y="40" width="12" height="12" rx="2" fill="#ffd23f"/>
+    <rect x="26" y="40" width="12" height="12" rx="2" fill="#ff2e93"/>
+    <rect x="40" y="40" width="12" height="12" rx="2" fill="#00e5ff"/>
+  </g>
+</svg>

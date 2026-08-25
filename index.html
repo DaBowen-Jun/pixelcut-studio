@@ -40,8 +40,12 @@
   <meta name="twitter:description" content="Turn photos into pixel art in 6 styles. Free, offline, private." />
   <meta name="twitter:image" content="https://pixcutstudio.netlify.app/assets/og-cover.svg" />
 
-  <!-- Favicon（后续替换为正式图标） -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='2' width='8' height='8' fill='%23ff2e93'/><rect x='12' y='2' width='8' height='8' fill='%2300e5ff'/><rect x='22' y='2' width='8' height='8' fill='%23ffd23f'/><rect x='2' y='12' width='8' height='8' fill='%2300ffc8'/><rect x='12' y='12' width='8' height='8' fill='%237928ff'/><rect x='22' y='12' width='8' height='8' fill='%23ff4fa3'/><rect x='2' y='22' width='8' height='8' fill='%23ffd23f'/><rect x='12' y='22' width='8' height='8' fill='%23ff2e93'/><rect x='22' y='22' width='8' height='8' fill='%2300e5ff'/></svg>" />
+  <!-- Favicon（SVG 主图标 + ICO 兜底，覆盖 Chrome / Firefox / Safari / iOS / Android） -->
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+  <link rel="mask-icon" href="/assets/favicon.svg" color="#ff2e93" />
+  <meta name="theme-color" content="#0b0d1a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" />
