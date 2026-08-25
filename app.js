@@ -70,7 +70,11 @@ const I18N = {
     'status.done': '✅ 完成：{dims} 像素块 · {style} · {colors} 色层',
     'status.fail': '❌ 生成失败：',
     'share.text': '我用 PixelCut Studio 把照片变成了像素风🎨 6种风格免费玩👉 ',
-    'share.copied': '✅ 分享文案已复制到剪贴板'
+    'share.copied': '✅ 分享文案已复制到剪贴板',
+    'sponsor.label': '赞助内容 · Sponsored',
+    'sponsor.fallback.t': '想在这里展示你的产品？',
+    'sponsor.fallback.d': '面向设计/开发者人群，CPM $3-$8，无中间商抽佣。',
+    'sponsor.fallback.cta': '联系投放'
   },
   en: {
     brand: 'PixelCut Studio',
@@ -112,7 +116,11 @@ const I18N = {
     'status.done': '✅ Done: {dims} pixels · {style} · {colors} color steps',
     'status.fail': '❌ Failed: ',
     'share.text': 'Turned my photo into pixel art with PixelCut Studio 🎨 6 styles, free👉 ',
-    'share.copied': '✅ Share text copied to clipboard'
+    'share.copied': '✅ Share text copied to clipboard',
+    'sponsor.label': 'Sponsored',
+    'sponsor.fallback.t': 'Want to show your product here?',
+    'sponsor.fallback.d': 'Reach designers & devs. CPM $3–$8, no middleman.',
+    'sponsor.fallback.cta': 'Book ad slot'
   }
 };
 
@@ -737,3 +745,29 @@ drawHeroDemo();
 
 // 初始化语言
 applyLang(currentLang);
+
+// ===== 赞助位：Carbon Ads 加载失败时回退到自营招租卡片 =====
+(function initSponsor() {
+  const slot = $('carbonads');
+  const fallback = document.querySelector('.sponsor__fallback');
+  if (!slot || !fallback) return;
+
+  // Carbon 加载成功的标志：在 #carbonads 内插入 .carbon-wrap 元素
+  let loaded = false;
+  const observer = new MutationObserver(() => {
+    if (slot.querySelector('.carbon-wrap, .carbonad, [data-carbon]') || slot.children.length > 1) {
+      loaded = true;
+      fallback.style.display = 'none';
+      observer.disconnect();
+    }
+  });
+  observer.observe(slot, { childList: true, subtree: true });
+
+  // 8 秒超时仍未出现广告内容 → 显示招租 fallback
+  setTimeout(() => {
+    if (!loaded) {
+      fallback.style.display = 'flex';
+      observer.disconnect();
+    }
+  }, 8000);
+})();

@@ -492,3 +492,109 @@ main { position: relative; z-index: 2; }
   .plans { grid-template-columns: 1fr; }
   .modal__panel { padding: 26px 18px 22px; }
 }
+
+/* ===== 赞助位 / Carbon Ads ===== */
+.sponsor {
+  background: linear-gradient(180deg, rgba(255, 46, 147, 0.04), rgba(0, 229, 255, 0.04));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 22px 20px 26px;
+  margin-top: 20px;
+}
+.sponsor__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.sponsor__label {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8a8aa3;
+  font-weight: 600;
+}
+.sponsor__slot {
+  width: 100%;
+  max-width: 760px;
+  min-height: 110px;
+  background: rgba(11, 13, 26, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+/* Carbon Ads 自带样式覆盖：让广告卡片适配深色玻璃面板 */
+#carbonads {
+  width: 100%;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+}
+#carbonads .carbon-wrap {
+  display: flex !important;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: transparent !important;
+}
+#carbonads .carbon-img {
+  width: 100px !important;
+  height: 100px !important;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+#carbonads .carbon-text,
+#carbonads .carbon-poweredby {
+  color: #e8e8f3 !important;
+  font-size: 13.5px !important;
+  line-height: 1.45;
+}
+#carbonads .carbon-text a,
+#carbonads .carbon-poweredby {
+  color: #ff2e93 !important;
+}
+#carbonads .carbon-poweredby {
+  font-size: 11px !important;
+  opacity: 0.7;
+  display: block;
+  margin-top: 4px;
+}
+/* 自营招租 fallback */
+.sponsor__fallback {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.sponsor__fallback-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+.sponsor__fallback-text {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sponsor__fallback-text strong {
+  font-size: 14px;
+  color: #f3f3fa;
+  font-weight: 600;
+}
+.sponsor__fallback-text span {
+  font-size: 12.5px;
+  color: #aaa;
+}
+.sponsor__fallback-cta {
+  flex-shrink: 0;
+}
+@media (max-width: 600px) {
+  .sponsor__fallback-cta { width: 100%; text-align: center; }
+}

@@ -380,6 +380,30 @@
     </section>
   </main>
 
+  <!-- 赞助内容（Carbon Ads · 设计/开发者圈高单价广告，CPM $3-$8） -->
+  <aside class="sponsor" aria-label="Sponsored content">
+    <div class="sponsor__inner">
+      <span class="sponsor__label" data-i18n="sponsor.label">赞助内容 · Sponsored</span>
+      <div class="sponsor__slot">
+        <!-- Carbon Ads 主广告位；serve 需替换为你在 carbonads.net 申请获批后的 ID -->
+        <div id="carbonads">
+          <!-- 占位内容，Carbon 加载成功后会被替换；加载失败则显示自营招租 -->
+          <div class="sponsor__fallback">
+            <span class="sponsor__fallback-icon">⚡</span>
+            <div class="sponsor__fallback-text">
+              <strong data-i18n="sponsor.fallback.t">想在这里展示你的产品？</strong>
+              <span data-i18n="sponsor.fallback.d">面向设计/开发者人群，CPM $3-$8，无中间商抽佣。</span>
+            </div>
+            <a class="btn btn--ghost btn--sm sponsor__fallback-cta"
+               href="mailto:ads@pixcutstudio.netlify.app?subject=PixelCut%20Studio%20Ad%20Inquiry"
+               data-i18n="sponsor.fallback.cta">联系投放</a>
+          </div>
+        </div>
+        <script async src="//cdn.carbonads.com/carbon.js?serve=CKYIE23U&amp;placement=pixcutstudiocom" id="_carbonads_js"></script>
+      </div>
+    </div>
+  </aside>
+
   <!-- 页脚 -->
   <footer class="footer">
     <div class="footer__inner">
