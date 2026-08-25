@@ -598,3 +598,125 @@ main { position: relative; z-index: 2; }
 @media (max-width: 600px) {
   .sponsor__fallback-cta { width: 100%; text-align: center; }
 }
+
+/* ===== Fiverr 联盟营销：结果下方卡片 ===== */
+.affiliate-card {
+  margin: 22px auto 0;
+  max-width: 720px;
+  background: linear-gradient(135deg, rgba(255, 46, 147, 0.10), rgba(0, 229, 255, 0.10));
+  border: 1px solid rgba(255, 46, 147, 0.35);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 24px rgba(255, 46, 147, 0.10);
+}
+.affiliate-card__badge {
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ff8fc2;
+  font-weight: 600;
+}
+.affiliate-card__body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.affiliate-card__icon {
+  font-size: 28px;
+  line-height: 1;
+}
+.affiliate-card__text {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.affiliate-card__text strong {
+  font-size: 14.5px;
+  color: #f3f3fa;
+  font-weight: 600;
+}
+.affiliate-card__text span {
+  font-size: 13px;
+  color: #c8c8d8;
+}
+.affiliate-card .btn {
+  flex-shrink: 0;
+  text-decoration: none;
+}
+@media (max-width: 600px) {
+  .affiliate-card .btn { width: 100%; text-align: center; }
+}
+
+/* ===== 页脚联盟横条 ===== */
+.aff-bar {
+  max-width: 1100px;
+  margin: 30px auto 20px;
+  padding: 14px 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: linear-gradient(90deg, rgba(121, 40, 255, 0.10), rgba(0, 229, 255, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.aff-bar__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1dbf73;
+  box-shadow: 0 0 12px #1dbf73;
+  animation: aff-pulse 1.6s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes aff-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(1.4); }
+}
+.aff-bar__text {
+  flex: 1 1 200px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.aff-bar__text strong {
+  font-size: 13.5px;
+  color: #f3f3fa;
+  font-weight: 600;
+}
+.aff-bar__text span {
+  font-size: 12px;
+  color: #aaa;
+}
+.aff-bar__cta {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1dbf73;
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(29, 191, 115, 0.10);
+  border: 1px solid rgba(29, 191, 115, 0.30);
+  transition: all 0.18s;
+}
+.aff-bar__cta:hover {
+  background: rgba(29, 191, 115, 0.20);
+  border-color: rgba(29, 191, 115, 0.55);
+  transform: translateY(-1px);
+}
+@media (max-width: 600px) {
+  .aff-bar { padding: 14px 16px; }
+  .aff-bar__cta { width: 100%; text-align: center; }
+}

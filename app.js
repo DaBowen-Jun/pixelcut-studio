@@ -28,6 +28,30 @@ const formatSel = $('format');
 
 let sourceImage = null;
 
+// ---------- Fiverr 联盟营销（审核通过后替换 PLACEHOLDER_ID 为真实 a_id） ----------
+const FIVERR_AFFILIATE_ID = 'YOUR_FIVERR_ID';  // ← 审核通过后用 sed 替换即可
+const FIVERR_AFF_ENABLED = FIVERR_AFFILIATE_ID !== 'YOUR_FIVERR_ID';
+
+// 根据用户生成的风格，匹配 Fiverr 上最适合的设计师品类（更高转化）
+const FIVERR_STYLE_QUERIES = {
+  neon:    { query: 'neon+pixel+art',         cta_zh: '找设计师把霓虹肖像做成动态 GIF', cta_en: 'Hire a designer to animate this neon portrait' },
+  pop:     { query: 'pop+art+illustration',    cta_zh: '委托艺术家把这张做成限量海报',   cta_en: 'Commission a limited-edition poster of this' },
+  cyber:   { query: 'cyberpunk+illustration',  cta_zh: '雇佣赛博朋克插画师扩展世界观',   cta_en: 'Hire a cyberpunk illustrator to expand the world' },
+  ink:     { query: 'ink+illustration',        cta_zh: '找水墨插画师出品同款艺术微喷',   cta_en: 'Order a giclée print of this ink style' },
+  vintage: { query: 'retro+illustration',     cta_zh: '委托艺术家做成复古胶片影集',     cta_en: 'Commission a retro photo-album edition' },
+  thermal: { query: 'digital+art+commission',  cta_zh: '找数字艺术家定制热成像 NFT',     cta_en: 'Commission a thermal-style NFT' }
+};
+
+function buildFiverrUrl(query) {
+  return `https://www.fiverr.com/search/gigs?query=${query}&a_id=${FIVERR_AFFILIATE_ID}`;
+}
+
+// 追踪联盟点击（送到 Clarity + console 留痕）
+function trackAffiliateClick(label) {
+  try { window.clarity && window.clarity('set', 'fiverr_click', label); } catch (e) {}
+  console.log('[affiliate]', label);
+}
+
 // ---------- 国际化（中 / EN） ----------
 const I18N = {
   zh: {
@@ -74,7 +98,13 @@ const I18N = {
     'sponsor.label': '赞助内容 · Sponsored',
     'sponsor.fallback.t': '想在这里展示你的产品？',
     'sponsor.fallback.d': '面向设计/开发者人群，CPM $3-$8，无中间商抽佣。',
-    'sponsor.fallback.cta': '联系投放'
+    'sponsor.fallback.cta': '联系投放',
+    'aff.badge': '推荐服务 · Recommended',
+    'aff.t': '想把作品升级？',
+    'aff.cta': '前往 Fiverr →',
+    'footer.aff.t': '想把这张头像做成周边？',
+    'footer.aff.d': 'Fiverr 上 5 万 + 设计师帮你出贴纸/T恤/动画',
+    'footer.aff.cta': '找设计师 ›'
   },
   en: {
     brand: 'PixelCut Studio',
@@ -120,7 +150,13 @@ const I18N = {
     'sponsor.label': 'Sponsored',
     'sponsor.fallback.t': 'Want to show your product here?',
     'sponsor.fallback.d': 'Reach designers & devs. CPM $3–$8, no middleman.',
-    'sponsor.fallback.cta': 'Book ad slot'
+    'sponsor.fallback.cta': 'Book ad slot',
+    'aff.badge': 'Recommended',
+    'aff.t': 'Want to take it further?',
+    'aff.cta': 'See Fiverr designers →',
+    'footer.aff.t': 'Turn this avatar into merch?',
+    'footer.aff.d': '50,000+ Fiverr designers for stickers, tees, animations',
+    'footer.aff.cta': 'Find a designer ›'
   }
 };
 
@@ -226,6 +262,9 @@ function generate() {
         .replace('{dims}', dims)
         .replace('{style}', styleLabel)
         .replace('{colors}', colorCount);
+
+      // 渲染「下一步推荐」联盟卡片（仅当 ID 已替换）
+      renderAffiliateCard(style);
     } catch (err) {
       statusEl.textContent = t('status.fail') + err.message;
     } finally {
@@ -234,7 +273,86 @@ function generate() {
   }, 30);
 }
 
-function pixelize(img, density, scale, colorCount, withOutline, style, saturation, contrast) {
+// 渲染联盟卡片：用户生成完成 → 推荐相关品类 Fiverr 设计师
+function renderAffiliateCard(style) {
+  if (!FIVERR_AFF_ENABLED) return;
+  const slot = $('affiliateSlot');
+  if (!slot) return;
+  const m = FIVERR_STYLE_QUERIES[style] || { query: 'pixel+art', cta_zh: '找设计师继续创作', cta_en: 'Hire a designer to keep creating' };
+  const cta = currentLang === 'zh' ? m.cta_zh : m.cta_en;
+  const url = buildFiverrUrl(m.query);
+
+  slot.innerHTML = `
+    <div class="affiliate-card">
+      <span class="affiliate-card__badge" data-i18n="aff.badge">推荐服务 · Recommended</span>
+      <div class="affiliate-card__body">
+        <span class="affiliate-card__icon" aria-hidden="true">🎨</span>
+        <div class="affiliate-card__text">
+          <strong data-i18n="aff.t">想把作品升级？</strong>
+          <span>${escapeHtml(cta)}</span>
+        </div>
+        <a class="btn btn--primary btn--sm"
+           href="${url}"
+           target="_blank"
+           rel="sponsored noopener"
+           data-affiliate="result"
+           data-aff-query="${m.query}">
+           <span data-i18n="aff.cta">前往 Fiverr →</span>
+        </a>
+      </div>
+    </div>
+  `;
+  applyLang(currentLang);
+
+  // 一次事件代理：拦截所有联盟链接点击用于统计
+  slot.querySelectorAll('a[data-affiliate]').forEach(a => {
+    a.addEventListener('click', () => {
+      trackAffiliateClick(`${a.dataset.affiliate}:${a.dataset.affQuery}`);
+    });
+  });
+}
+
+// HTML 转义（防御 XSS）
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// 加载页脚联盟横条（始终展示，不影响主功能）
+function renderFooterAffiliateBar() {
+  if (!FIVERR_AFF_ENABLED) return;
+  const slot = $('footerAffiliateBar');
+  if (!slot) return;
+  const url = buildFiverrUrl('pixel+art+designer');
+  slot.innerHTML = `
+    <div class="aff-bar">
+      <span class="aff-bar__dot"></span>
+      <span class="aff-bar__text">
+        <strong data-i18n="footer.aff.t">想把这张头像做成周边？</strong>
+        <span data-i18n="footer.aff.d">Fiverr 上 5 万 + 设计师帮你出贴纸/T恤/动画</span>
+      </span>
+      <a class="aff-bar__cta"
+         href="${url}"
+         target="_blank"
+         rel="sponsored noopener"
+         data-affiliate="footer"
+         data-aff-query="pixel+art+designer"
+         data-i18n="footer.aff.cta">找设计师 ›</a>
+    </div>
+  `;
+  applyLang(currentLang);
+  slot.querySelector('a[data-affiliate]').addEventListener('click', e => {
+    trackAffiliateClick(`${e.currentTarget.dataset.affiliate}:${e.currentTarget.dataset.affQuery}`);
+  });
+}
+
+// 根据语言变化刷新联盟卡片文案
+function refreshAffiliateCards() {
+  const slot = $('affiliateSlot');
+  if (slot && slot.firstElementChild) {
+    const style = styleSel ? styleSel.value : null;
+    if (style) renderAffiliateCard(style);
+  }
+}
   // 1) 计算降采样目标尺寸（保持比例，density 为长边像素数）
   let tw = img.width, th = img.height;
   if (tw >= th) { th = Math.round(th * density / tw); tw = density; }
@@ -668,6 +786,8 @@ function applyLang(lang) {
   document.querySelectorAll('[data-i18n-html]').forEach((el) => {
     el.innerHTML = t(el.getAttribute('data-i18n-html'));
   });
+  // 重新渲染联盟卡片（语言切换后保持推荐语一致）
+  refreshAffiliateCards();
   // 风格下拉文案
   for (const opt of styleSel.options) {
     const k = opt.value;
@@ -745,6 +865,9 @@ drawHeroDemo();
 
 // 初始化语言
 applyLang(currentLang);
+
+// ===== 联盟卡片：渲染（审核通过后再启用） =====
+renderFooterAffiliateBar();
 
 // ===== 赞助位：Carbon Ads 加载失败时回退到自营招租卡片 =====
 (function initSponsor() {
