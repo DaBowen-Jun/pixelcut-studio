@@ -353,6 +353,8 @@ function refreshAffiliateCards() {
     if (style) renderAffiliateCard(style);
   }
 }
+
+function pixelize(img, density, scale, colorCount, withOutline, style, saturation, contrast) {
   // 1) 计算降采样目标尺寸（保持比例，density 为长边像素数）
   let tw = img.width, th = img.height;
   if (tw >= th) { th = Math.round(th * density / tw); tw = density; }
