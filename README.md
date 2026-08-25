@@ -69,3 +69,67 @@ assets/og-cover.svg 社交分享封面图
 ## License
 
 MIT
+
+# PixelCut Studio
+
+> Turn photos into 8-bit pixel art | 把照片变成 8-bit 像素艺术
+
+Pure frontend, zero dependencies, zero cost. Upload a photo → Generate pixelated cartoon avatars locally in your browser. All processing is done in Canvas, no API calls, no server uploads.
+
+**👉 Try it live: [pixcutstudio.netlify.app](https://pixcutstudio.netlify.app/)**
+
+---
+
+## 6 Styles
+
+| Style | Effect |
+|-------|--------|
+| 🌈 Neon Portrait | High saturation blocks, cyber aesthetic |
+| 🎨 Pop Art | Flat color blocks, poster feel |
+| 🤖 Cyberpunk | Cool neon colors + CRT scan lines |
+| 🖌 Ink & Wash | Paper texture, oriental charm |
+| 📷 Retro Film | Nostalgic sepia brown tones |
+| 🌡 Thermal Imaging | Infrared gradient, tech vibes |
+
+## Features
+
+- 🌐 English/Chinese one-click toggle
+- 🖼️ Drag & drop / click upload with live preview
+- 🔍 Side-by-side original vs pixelated comparison
+- 🎚️ Adjust pixel density, scale, color count, saturation, contrast, outline
+- ⬇️ Download PNG / JPEG / WEBP
+- 🔒 Fully local processing, photos never uploaded
+- 💧 Auto-add semi-transparent watermark on download (brand + URL)
+- 🔗 One-click copy share text
+
+## Quick Start
+
+```bash
+# Double-click index.html to use immediately (no server needed)
+
+# Or use a local server:
+npm run dev
+# Open http://localhost:5173
+Deployment
+Pure static site, deploy anywhere:
+
+Netlify: Drag the dist/ folder to app.netlify.com/drop
+GitHub Pages: Push and set Settings → Pages → Source to main
+Vercel / Cloudflare Pages: Connect Git repo, leave Build Command empty
+
+Technical Details
+Downsampling → Resize to 64×64 / 96×96 based on pixel density
+Style Processing → HSL enhancement + brightness-layer color palette / sepia / ink wash / thermal gradient
+Edge Outlining → Brightness threshold detection for block edges
+Pixel-Perfect Scaling → imageSmoothingEnabled=false preserves crisp pixels
+Watermark Overlay → Draw semi-transparent brand text on Canvas before download
+
+File Structure
+index.html          Page structure + SEO meta + Open Graph
+style.css           Modern design system (glassmorphism / gradient / responsive)
+app.js              Canvas pixelation algorithm + i18n + watermark + sharing
+assets/examples/    6 style showcase images
+assets/og-cover.svg Social share cover image
+
+License
+MIT
