@@ -5,3 +5,4 @@ dist/
 server.js
 package.json
 package-lock.json
+generated-images/
