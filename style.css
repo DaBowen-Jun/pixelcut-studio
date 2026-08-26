@@ -841,3 +841,67 @@ main { position: relative; z-index: 2; }
   .aff-bar { padding: 14px 16px; }
   .aff-bar__cta { width: 100%; text-align: center; }
 }
+
+/* ---------- 我的作品（本地历史画廊） ---------- */
+.myworks { max-width: 1140px; margin: 72px auto; padding: 0 22px; }
+.myworks__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+.work-card {
+  position: relative;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 14px;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  transition: transform .18s, box-shadow .18s, border-color .18s;
+  text-align: left;
+  color: var(--ink);
+  font-family: inherit;
+}
+.work-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,.3); border-color: var(--brand-2, #ff2e93); }
+.work-card img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.work-card__meta {
+  display: block;
+  padding: 6px 8px;
+  font-size: 11px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.myworks__empty { text-align: center; color: var(--ink-faint); margin-top: 18px; font-size: 14px; }
+.myworks__empty[hidden] { display: none; }
+
+/* ---------- 作品查看弹窗 ---------- */
+.work-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(8, 6, 20, .6);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  z-index: 1000;
+  animation: shareFade .2s ease;
+}
+.work-backdrop[hidden] { display: none; }
+.work-modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 1001; width: min(92vw, 420px);
+  background: var(--surface); border: 1px solid rgba(255,255,255,.16);
+  border-radius: 18px; padding: 16px; text-align: center;
+  box-shadow: 0 24px 70px rgba(0,0,0,.45);
+  animation: sharePop .25s ease;
+}
+.work-modal[hidden] { display: none; }
+.work-modal img { width: 100%; height: auto; border-radius: 12px; image-rendering: pixelated; background: #0d0b1f; }
+.work-modal__actions { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+.work-modal__actions .btn { text-decoration: none; }
+.work-modal__close {
+  position: absolute; top: 10px; right: 10px;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--ink-soft); font-size: 18px; line-height: 1; cursor: pointer;
+}
+.work-modal__close:hover { color: var(--ink); background: var(--surface-2); }

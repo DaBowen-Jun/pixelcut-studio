@@ -6,6 +6,9 @@
   <title>PixelCut Studio · 照片变像素艺术 | 8-bit Pixel Art Generator</title>
   <meta name="description" content="上传照片，浏览器本地一键生成 8-bit 像素卡通头像。免费、离线、隐私安全。6 种风格：霓虹、波普、赛博朋克、水墨、复古、热成像。| Turn photos into 8-bit pixel art — free, offline, private. 6 styles: Neon, Pop, Cyberpunk, Ink, Vintage, Thermal." />
   <meta name="keywords" content="像素头像, 像素艺术, 8-bit, pixel art, avatar maker, pixel avatar, 照片转像素, photo to pixel, neon portrait, cyberpunk, pop art" />
+  <meta name="theme-color" content="#ff2e93" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
 
   <!-- Google Search Console 验证 -->
   <meta name="google-site-verification" content="owIMVVPgHGOT9h7ndqydnLuAMihwOwdP-jGcU6KzHnY" />
@@ -384,6 +387,16 @@
         </div>
       </div>
     </section>
+
+    <!-- 我的作品：本地保存的最近生成记录 -->
+    <section id="myworks" class="myworks">
+      <div class="section-head">
+        <h2 class="section-title" data-i18n="myworks.title">我的作品</h2>
+        <p class="section-desc" data-i18n="myworks.subtitle">本地保存的最近生成记录，下次打开还能翻到。</p>
+      </div>
+      <div class="myworks__grid" id="myworksGrid"></div>
+      <p class="myworks__empty" id="myworksEmpty" data-i18n="myworks.empty">还没有作品，去上方生成一张吧～</p>
+    </section>
   </main>
 
   <!-- 页脚联盟横条（生成完成后展示，由 app.js 根据 FIVERR_AFF_ENABLED 自动启用） -->
@@ -476,6 +489,17 @@
       <p data-i18n="share.wechat.tip">微信扫码或复制链接发送给朋友</p>
       <img id="shareWechatQr" alt="WeChat QR code" />
       <button class="btn btn--sm" data-platform="copy-wechat" data-i18n="share.copy">复制链接</button>
+    </div>
+  </div>
+
+  <!-- 作品查看弹窗 -->
+  <div class="work-backdrop" id="workBackdrop" hidden></div>
+  <div class="work-modal" id="workModal" role="dialog" aria-modal="true" aria-label="Work" hidden>
+    <button class="work-modal__close" id="workModalClose" aria-label="Close">×</button>
+    <img id="workModalImg" alt="work" />
+    <div class="work-modal__actions">
+      <a class="btn btn--accent btn--sm" id="workDownload" download="pixelcut.png" data-i18n="myworks.download">⬇ 下载</a>
+      <button class="btn btn--ghost btn--sm" id="workDelete" data-i18n="myworks.delete">🗑 删除</button>
     </div>
   </div>
 

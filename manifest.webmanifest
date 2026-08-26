@@ -1,0 +1,16 @@
+{
+  "name": "PixelCut Studio",
+  "short_name": "PixelCut",
+  "description": "免费在线把照片变成像素艺术头像，6 种风格，纯本地处理。",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0b1f",
+  "theme_color": "#ff2e93",
+  "icons": [
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

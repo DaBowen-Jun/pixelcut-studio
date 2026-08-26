@@ -130,7 +130,12 @@ const I18N = {
     'sponsor.label': '赞助内容 · Sponsored',
     'sponsor.fallback.t': '想在这里展示你的产品？',
     'sponsor.fallback.d': '面向设计/开发者人群，CPM $3-$8，无中间商抽佣。',
-    'sponsor.fallback.cta': '联系投放'
+    'sponsor.fallback.cta': '联系投放',
+    'myworks.title': '我的作品',
+    'myworks.subtitle': '本地保存的最近生成记录，下次打开还能翻到。',
+    'myworks.empty': '还没有作品，去上方生成一张吧～',
+    'myworks.download': '⬇ 下载',
+    'myworks.delete': '🗑 删除'
   },
   en: {
     brand: 'PixelCut Studio',
@@ -186,7 +191,12 @@ const I18N = {
     'sponsor.label': 'Sponsored',
     'sponsor.fallback.t': 'Want to show your product here?',
     'sponsor.fallback.d': 'Reach designers & devs. CPM $3–$8, no middleman.',
-    'sponsor.fallback.cta': 'Book ad slot'
+    'sponsor.fallback.cta': 'Book ad slot',
+    'myworks.title': 'My works',
+    'myworks.subtitle': 'Your recent generations, saved locally — come back anytime.',
+    'myworks.empty': 'No works yet — generate one above!',
+    'myworks.download': '⬇ Download',
+    'myworks.delete': '🗑 Delete'
   }
 };
 
@@ -292,6 +302,9 @@ function generate() {
         .replace('{dims}', dims)
         .replace('{style}', styleLabel)
         .replace('{colors}', colorCount);
+
+      // 保存到本地作品历史
+      saveWork(style, styleLabel);
 
       // 渲染「下一步推荐」联盟卡片（仅当 ID 已替换）
       renderAffiliateCard(style);
@@ -1027,3 +1040,94 @@ renderFooterAffiliateBar();
     }
   }, 8000);
 })();
+
+// ===== 本地作品历史（localStorage，纯前端零成本） =====
+const WORKS_KEY = 'pixelcut_works';
+const MAX_WORKS = 12;
+
+function makeThumb(canvas, maxW) {
+  const ratio = canvas.width / canvas.height;
+  const w = Math.min(maxW, canvas.width);
+  const h = Math.round(w / ratio);
+  const tmp = document.createElement('canvas');
+  tmp.width = w; tmp.height = h;
+  tmp.getContext('2d').drawImage(canvas, 0, 0, w, h);
+  return tmp.toDataURL('image/png');
+}
+
+function loadWorks() {
+  try { return JSON.parse(localStorage.getItem(WORKS_KEY)) || []; }
+  catch (e) { return []; }
+}
+
+function saveWork(styleKey, styleLabel) {
+  try {
+    const thumb = makeThumb(outCanvas, 240);
+    const works = loadWorks();
+    works.unshift({ src: thumb, style: styleLabel || styleKey, ts: Date.now() });
+    while (works.length > MAX_WORKS) works.pop();
+    localStorage.setItem(WORKS_KEY, JSON.stringify(works));
+    renderWorks();
+  } catch (e) { /* localStorage 满或被禁用时静默跳过 */ }
+}
+
+function renderWorks() {
+  const grid = $('myworksGrid');
+  const empty = $('myworksEmpty');
+  if (!grid) return;
+  const works = loadWorks();
+  grid.innerHTML = '';
+  if (!works.length) { if (empty) empty.hidden = false; return; }
+  if (empty) empty.hidden = true;
+  works.forEach((w) => {
+    const card = document.createElement('button');
+    card.className = 'work-card';
+    card.type = 'button';
+    card.innerHTML = '<img src="' + w.src + '" alt="work" loading="lazy" />' +
+      '<span class="work-card__meta">' + (w.style || '') + ' · ' + new Date(w.ts).toLocaleDateString() + '</span>';
+    card.addEventListener('click', () => openWork(w));
+    grid.appendChild(card);
+  });
+}
+
+let activeWork = null;
+function openWork(w) {
+  activeWork = w;
+  const modal = $('workModal');
+  const img = $('workModalImg');
+  const dl = $('workDownload');
+  if (img) img.src = w.src;
+  if (dl) dl.href = w.src;
+  if (modal) modal.hidden = false;
+  if ($('workBackdrop')) $('workBackdrop').hidden = false;
+}
+function closeWork() {
+  if ($('workModal')) $('workModal').hidden = true;
+  if ($('workBackdrop')) $('workBackdrop').hidden = true;
+  activeWork = null;
+}
+function deleteWork() {
+  if (!activeWork) return;
+  const works = loadWorks().filter((w) => w.ts !== activeWork.ts);
+  try { localStorage.setItem(WORKS_KEY, JSON.stringify(works)); } catch (e) {}
+  closeWork();
+  renderWorks();
+}
+
+const workModalClose = $('workModalClose');
+const workDeleteBtn = $('workDelete');
+const workBackdropEl = $('workBackdrop');
+if (workModalClose) workModalClose.addEventListener('click', closeWork);
+if (workDeleteBtn) workDeleteBtn.addEventListener('click', deleteWork);
+if (workBackdropEl) workBackdropEl.addEventListener('click', closeWork);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeWork(); });
+
+// ===== PWA：注册 Service Worker（支持离线打开 + 可安装到主屏） =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  });
+}
+
+// 首次加载渲染作品画廊
+renderWorks();
