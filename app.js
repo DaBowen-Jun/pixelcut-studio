@@ -743,6 +743,7 @@ downloadBtn.addEventListener('click', download);
 // ---------- 分享面板（多平台） ----------
 const shareBtn = $('shareBtn');
 const sharePanel = $('sharePanel');
+const shareBackdrop = $('shareBackdrop');
 const sharePanelClose = $('sharePanelClose');
 const shareWechat = $('shareWechat');
 const shareWechatQr = $('shareWechatQr');
@@ -754,14 +755,20 @@ function getShareText() { return t('share.text') + ' ' + location.href; }
 function openSharePanel() {
   if (sharePanel) {
     sharePanel.hidden = false;
+    if (shareBackdrop) shareBackdrop.hidden = false;
     if (shareWechat) shareWechat.hidden = true;
     if (shareWechatQr) shareWechatQr.src = '';
   }
 }
-function closeSharePanel() { if (sharePanel) sharePanel.hidden = true; }
+function closeSharePanel() {
+  if (sharePanel) sharePanel.hidden = true;
+  if (shareBackdrop) shareBackdrop.hidden = true;
+}
 
 shareBtn.addEventListener('click', openSharePanel);
 if (sharePanelClose) sharePanelClose.addEventListener('click', closeSharePanel);
+if (shareBackdrop) shareBackdrop.addEventListener('click', closeSharePanel);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSharePanel(); });
 
 document.querySelectorAll('.share-btn').forEach((btn) => {
   btn.addEventListener('click', (e) => {
