@@ -135,7 +135,18 @@ const I18N = {
     'myworks.subtitle': '本地保存的最近生成记录，下次打开还能翻到。',
     'myworks.empty': '还没有作品，去上方生成一张吧～',
     'myworks.download': '⬇ 下载',
-    'myworks.delete': '🗑 删除'
+    'myworks.delete': '🗑 删除',
+    'community.nav': '社区',
+    'community.title': '社区画廊',
+    'community.hint': '用户分享的像素作品 · 点击看大图',
+    'community.refresh': '刷新',
+    'community.loading': '加载中…',
+    'community.loadFail': '加载失败，请稍后重试',
+    'community.empty': '还没有作品，去生成一张分享到社区吧！',
+    'community.share': '🖼 分享到社区',
+    'community.shared': '✅ 已分享到社区画廊！',
+    'community.sharedShort': '已分享',
+    'community.shareFail': '⚠️ 分享失败，请重试'
   },
   en: {
     brand: 'PixelCut Studio',
@@ -196,7 +207,18 @@ const I18N = {
     'myworks.subtitle': 'Your recent generations, saved locally — come back anytime.',
     'myworks.empty': 'No works yet — generate one above!',
     'myworks.download': '⬇ Download',
-    'myworks.delete': '🗑 Delete'
+    'myworks.delete': '🗑 Delete',
+    'community.nav': 'Community',
+    'community.title': 'Community Gallery',
+    'community.hint': 'Pixel art shared by users · click to enlarge',
+    'community.refresh': 'Refresh',
+    'community.loading': 'Loading…',
+    'community.loadFail': 'Failed to load. Try again later.',
+    'community.empty': 'No works yet — generate one and share it!',
+    'community.share': '🖼 Share to Community',
+    'community.shared': '✅ Shared to the community gallery!',
+    'community.sharedShort': 'Shared',
+    'community.shareFail': '⚠️ Share failed. Try again.'
   }
 };
 
@@ -276,6 +298,8 @@ function generate() {
   if (!sourceImage) return;
   generateBtn.disabled = true;
   statusEl.textContent = t('status.loading');
+  const sg = $('shareGalleryBtn');
+  if (sg) { sg.disabled = false; sg.textContent = t('community.share'); }
 
   // 让 UI 先刷新再执行（避免卡顿假死）
   setTimeout(() => {
@@ -1131,3 +1155,112 @@ if ('serviceWorker' in navigator) {
 
 // 首次加载渲染作品画廊
 renderWorks();
+
+// ===== 社区画廊（Netlify Functions + Blobs 后端） =====
+const communityBtn = $('communityBtn');
+const communityModal = $('communityModal');
+const communityBackdrop = $('communityBackdrop');
+const communityClose = $('communityClose');
+const communityRefresh = $('communityRefresh');
+const communityGrid = $('communityGrid');
+const communityEmpty = $('communityEmpty');
+const communityLightbox = $('communityLightbox');
+const communityLightboxClose = $('communityLightboxClose');
+const communityLightboxImg = $('communityLightboxImg');
+const shareGalleryBtn = $('shareGalleryBtn');
+
+function openCommunity() {
+  if (!communityModal) return;
+  communityModal.hidden = false;
+  if (communityBackdrop) communityBackdrop.hidden = false;
+  localizeElement(communityModal);
+  loadCommunity();
+}
+function closeCommunity() {
+  if (communityModal) communityModal.hidden = true;
+  if (communityBackdrop) communityBackdrop.hidden = true;
+  if (communityLightbox) communityLightbox.hidden = true;
+}
+
+async function shareToGallery() {
+  const out = outCanvas;
+  if (!out || !out.width) return;
+  if (shareGalleryBtn) shareGalleryBtn.disabled = true;
+  statusEl.textContent = t('community.loading');
+  try {
+    const thumb = makeThumb(out, 360);
+    const style = styleSel ? styleSel.value : 'unknown';
+    const res = await fetch('/.netlify/functions/gallery-submit', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ image: thumb, style: style, caption: '' }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data && data.ok) {
+      statusEl.textContent = t('community.shared');
+      if (shareGalleryBtn) shareGalleryBtn.textContent = '✅ ' + t('community.sharedShort');
+    } else {
+      statusEl.textContent = t('community.shareFail');
+      if (shareGalleryBtn) shareGalleryBtn.disabled = false;
+    }
+  } catch (e) {
+    statusEl.textContent = t('community.shareFail');
+    if (shareGalleryBtn) shareGalleryBtn.disabled = false;
+  }
+}
+
+async function loadCommunity() {
+  if (!communityGrid) return;
+  communityGrid.innerHTML = '<p class="community__loading">' + t('community.loading') + '</p>';
+  if (communityEmpty) communityEmpty.hidden = true;
+  try {
+    const res = await fetch('/.netlify/functions/gallery-list');
+    const data = await res.json().catch(() => ({ items: [] }));
+    const items = Array.isArray(data.items) ? data.items : [];
+    if (!items.length) {
+      communityGrid.innerHTML = '';
+      if (communityEmpty) communityEmpty.hidden = false;
+      return;
+    }
+    communityGrid.innerHTML = '';
+    items.forEach((it) => {
+      const btn = document.createElement('button');
+      btn.className = 'community__item';
+      btn.type = 'button';
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.src = '/.netlify/functions/gallery-image?id=' + encodeURIComponent(it.id);
+      img.alt = (it.style || 'pixel') + ' pixel art';
+      btn.appendChild(img);
+      const cap = document.createElement('span');
+      cap.className = 'community__cap';
+      const sn = (STYLE_NAMES[it.style] && STYLE_NAMES[it.style][currentLang]) || it.style || '';
+      cap.textContent = sn + (it.caption ? ' · ' + it.caption : '');
+      btn.appendChild(cap);
+      btn.addEventListener('click', () => openCommunityLightbox(it.id));
+      communityGrid.appendChild(btn);
+    });
+  } catch (e) {
+    communityGrid.innerHTML = '<p class="community__loading">' + t('community.loadFail') + '</p>';
+  }
+}
+
+function openCommunityLightbox(id) {
+  if (!communityLightbox || !communityLightboxImg) return;
+  communityLightboxImg.src = '/.netlify/functions/gallery-image?id=' + encodeURIComponent(id);
+  communityLightbox.hidden = false;
+}
+function closeCommunityLightbox() {
+  if (communityLightbox) communityLightbox.hidden = true;
+}
+
+if (communityBtn) communityBtn.addEventListener('click', openCommunity);
+if (communityClose) communityClose.addEventListener('click', closeCommunity);
+if (communityBackdrop) communityBackdrop.addEventListener('click', closeCommunity);
+if (communityRefresh) communityRefresh.addEventListener('click', loadCommunity);
+if (shareGalleryBtn) shareGalleryBtn.addEventListener('click', shareToGallery);
+if (communityLightboxClose) communityLightboxClose.addEventListener('click', closeCommunityLightbox);
+if (communityLightbox) communityLightbox.addEventListener('click', (e) => { if (e.target === communityLightbox) closeCommunityLightbox(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeCommunity(); closeCommunityLightbox(); }
+});

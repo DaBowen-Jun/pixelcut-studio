@@ -905,3 +905,76 @@ main { position: relative; z-index: 2; }
   color: var(--ink-soft); font-size: 18px; line-height: 1; cursor: pointer;
 }
 .work-modal__close:hover { color: var(--ink); background: var(--surface-2); }
+
+/* ---------- 社区画廊（后端共享作品墙） ---------- */
+.nav__community {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-left: 18px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--ink-soft); font-family: inherit; font-size: 14px; font-weight: 600;
+  padding: 7px 14px; border-radius: 999px; cursor: pointer; transition: all .2s;
+}
+.nav__community:hover { color: var(--ink); border-color: var(--border-strong); transform: translateY(-1px); }
+
+.community-backdrop {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(8, 6, 20, .6); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  animation: shareFade .2s ease;
+}
+.community-backdrop[hidden] { display: none; }
+.community-modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 1001; width: min(94vw, 760px); max-height: 88vh; overflow-y: auto;
+  background: linear-gradient(135deg, rgba(255, 46, 147, 0.12), rgba(124, 92, 255, 0.12)), var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 18px; padding: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .45);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  animation: sharePop .25s ease;
+}
+.community-modal[hidden] { display: none; }
+.community-modal__head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 12px;
+}
+.community-modal__close {
+  width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink-soft); font-size: 18px; line-height: 1; cursor: pointer;
+  transition: all .2s;
+}
+.community-modal__close:hover { color: var(--ink); background: var(--surface-2); }
+.community-modal__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.community-modal__hint { font-size: 13px; color: var(--ink-soft); }
+.community__grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px;
+}
+.community__item {
+  position: relative; padding: 0; border: 1px solid var(--border); background: var(--surface);
+  border-radius: 14px; overflow: hidden; cursor: pointer;
+  transition: transform .18s, box-shadow .18s, border-color .18s;
+  text-align: left; color: var(--ink); font-family: inherit;
+}
+.community__item:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,.3); border-color: var(--brand-2); }
+.community__item img { display: block; width: 100%; height: auto; image-rendering: pixelated; background: #0d0b1f; }
+.community__cap {
+  display: block; padding: 6px 8px; font-size: 11px; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.community__loading, .community__empty {
+  text-align: center; color: var(--ink-faint); font-size: 14px; padding: 24px 0; grid-column: 1 / -1;
+}
+.community__empty[hidden] { display: none; }
+.community-lightbox {
+  position: fixed; inset: 0; z-index: 1002; display: flex; align-items: center; justify-content: center;
+  background: rgba(6, 8, 18, .82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  animation: shareFade .2s ease;
+}
+.community-lightbox[hidden] { display: none; }
+.community-lightbox img {
+  max-width: 90vw; max-height: 86vh; border-radius: 14px; image-rendering: pixelated;
+  background: #0d0b1f; box-shadow: 0 24px 70px rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.14);
+}
+.community-lightbox__close {
+  position: absolute; top: 18px; right: 18px; width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer;
+}
+.community-lightbox__close:hover { background: var(--surface-2); }
