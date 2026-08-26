@@ -116,6 +116,16 @@ const I18N = {
     'status.done': '✅ 完成：{dims} 像素块 · {style} · {colors} 色层',
     'status.fail': '❌ 生成失败：',
     'share.text': '我用 PixelCut Studio 把照片变成了像素风🎨 6种风格免费玩👉 ',
+    'share.title': '分享给朋友',
+    'share.twitter': 'X / Twitter',
+    'share.facebook': 'Facebook',
+    'share.linkedin': 'LinkedIn',
+    'share.pinterest': 'Pinterest',
+    'share.weibo': '微博',
+    'share.wechat': '微信',
+    'share.tiktok': 'TikTok',
+    'share.copy': '复制链接',
+    'share.wechat.tip': '微信扫码或复制链接发送给朋友',
     'share.copied': '✅ 分享文案已复制到剪贴板',
     'sponsor.label': '赞助内容 · Sponsored',
     'sponsor.fallback.t': '想在这里展示你的产品？',
@@ -162,6 +172,16 @@ const I18N = {
     'status.done': '✅ Done: {dims} pixels · {style} · {colors} color steps',
     'status.fail': '❌ Failed: ',
     'share.text': 'Turned my photo into pixel art with PixelCut Studio 🎨 6 styles, free👉 ',
+    'share.title': 'Share with friends',
+    'share.twitter': 'X / Twitter',
+    'share.facebook': 'Facebook',
+    'share.linkedin': 'LinkedIn',
+    'share.pinterest': 'Pinterest',
+    'share.weibo': 'Weibo',
+    'share.wechat': 'WeChat',
+    'share.tiktok': 'TikTok',
+    'share.copy': 'Copy link',
+    'share.wechat.tip': 'Scan or copy the link to share on WeChat',
     'share.copied': '✅ Share text copied to clipboard',
     'sponsor.label': 'Sponsored',
     'sponsor.fallback.t': 'Want to show your product here?',
@@ -720,11 +740,72 @@ function download() {
 generateBtn.addEventListener('click', generate);
 downloadBtn.addEventListener('click', download);
 
-// 分享按钮：复制预设文案 + 网址到剪贴板
+// ---------- 分享面板（多平台） ----------
 const shareBtn = $('shareBtn');
-shareBtn.addEventListener('click', () => {
-  const siteUrl = location.href;
-  const text = t('share.text') + siteUrl;
+const sharePanel = $('sharePanel');
+const sharePanelClose = $('sharePanelClose');
+const shareWechat = $('shareWechat');
+const shareWechatQr = $('shareWechatQr');
+
+const OG_IMAGE = 'https://pixcutstudio.netlify.app/assets/og-cover.svg';
+
+function getShareText() { return t('share.text') + ' ' + location.href; }
+
+function openSharePanel() {
+  if (sharePanel) {
+    sharePanel.hidden = false;
+    if (shareWechat) shareWechat.hidden = true;
+    if (shareWechatQr) shareWechatQr.src = '';
+  }
+}
+function closeSharePanel() { if (sharePanel) sharePanel.hidden = true; }
+
+shareBtn.addEventListener('click', openSharePanel);
+if (sharePanelClose) sharePanelClose.addEventListener('click', closeSharePanel);
+
+document.querySelectorAll('.share-btn').forEach((btn) => {
+  btn.addEventListener('click', (e) => {
+    const platform = e.currentTarget.getAttribute('data-platform');
+    if (platform) handleShare(platform);
+  });
+});
+
+function handleShare(platform) {
+  const url = location.href;
+  const text = t('share.text');
+  switch (platform) {
+    case 'twitter':
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+      break;
+    case 'facebook':
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+      break;
+    case 'linkedin':
+      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+      break;
+    case 'pinterest':
+      window.open(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(OG_IMAGE)}&description=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+      break;
+    case 'weibo':
+      window.open(`https://service.weibo.com/share/share.php?title=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+      break;
+    case 'wechat':
+      if (shareWechat && shareWechatQr) {
+        shareWechat.hidden = false;
+        shareWechatQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`;
+      }
+      break;
+    case 'copy':
+    case 'copy-wechat':
+      copyToClipboard(url);
+      break;
+    case 'tiktok':
+      copyToClipboard(`PixelCut Studio 🎨 Turn photos into 8-bit pixel art. Free, no upload. Check it out: ${url} #pixelart #8bit #ai #pixelcutstudio`);
+      break;
+  }
+}
+
+function copyToClipboard(text) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
       statusEl.textContent = t('share.copied');
@@ -732,7 +813,7 @@ shareBtn.addEventListener('click', () => {
   } else {
     fallbackCopy(text);
   }
-});
+}
 function fallbackCopy(text) {
   const ta = document.createElement('textarea');
   ta.value = text;

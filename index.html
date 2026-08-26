@@ -275,6 +275,54 @@
             </figure>
           </div>
           <div class="status" id="status"></div>
+
+          <!-- 分享面板：一键分享到 X / Facebook / LinkedIn / Pinterest / 微博 / 微信 / TikTok / 复制链接 -->
+          <div class="share-panel" id="sharePanel" hidden>
+            <div class="share-panel__head">
+              <span data-i18n="share.title">分享给朋友</span>
+              <button class="share-panel__close" id="sharePanelClose" aria-label="Close">×</button>
+            </div>
+            <div class="share-panel__grid">
+              <button class="share-btn" data-platform="twitter" aria-label="X / Twitter">
+                <span class="share-btn__icon">𝕏</span>
+                <span class="share-btn__label" data-i18n="share.twitter">X / Twitter</span>
+              </button>
+              <button class="share-btn" data-platform="facebook" aria-label="Facebook">
+                <span class="share-btn__icon">f</span>
+                <span class="share-btn__label" data-i18n="share.facebook">Facebook</span>
+              </button>
+              <button class="share-btn" data-platform="linkedin" aria-label="LinkedIn">
+                <span class="share-btn__icon">in</span>
+                <span class="share-btn__label" data-i18n="share.linkedin">LinkedIn</span>
+              </button>
+              <button class="share-btn" data-platform="pinterest" aria-label="Pinterest">
+                <span class="share-btn__icon">P</span>
+                <span class="share-btn__label" data-i18n="share.pinterest">Pinterest</span>
+              </button>
+              <button class="share-btn" data-platform="weibo" aria-label="微博">
+                <span class="share-btn__icon">📝</span>
+                <span class="share-btn__label" data-i18n="share.weibo">微博</span>
+              </button>
+              <button class="share-btn" data-platform="wechat" aria-label="微信">
+                <span class="share-btn__icon">💬</span>
+                <span class="share-btn__label" data-i18n="share.wechat">微信</span>
+              </button>
+              <button class="share-btn" data-platform="tiktok" aria-label="TikTok">
+                <span class="share-btn__icon">🎵</span>
+                <span class="share-btn__label" data-i18n="share.tiktok">TikTok</span>
+              </button>
+              <button class="share-btn" data-platform="copy" aria-label="复制链接">
+                <span class="share-btn__icon">🔗</span>
+                <span class="share-btn__label" data-i18n="share.copy">复制链接</span>
+              </button>
+            </div>
+            <div class="share-wechat" id="shareWechat" hidden>
+              <p data-i18n="share.wechat.tip">微信扫码或复制链接发送给朋友</p>
+              <img id="shareWechatQr" alt="WeChat QR code" />
+              <button class="btn btn--sm" data-platform="copy-wechat" data-i18n="share.copy">复制链接</button>
+            </div>
+          </div>
+
           <!-- 联盟卡片：用户生成完成后，由 app.js 渲染相关品类（中文→淘宝，英文→AppSumo） -->
           <div id="affiliateSlot"></div>
         </section>
