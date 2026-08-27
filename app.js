@@ -1691,14 +1691,18 @@ function applyMode() {
     buildDensityOptions(PERLER_DENSITY, '29');
     if (pegOverlay) pegOverlay.hidden = !perlerGridOn;
     const hint = $('perlerHint'); if (hint) hint.hidden = false;
-    // 已有结果则刷新网格与按钮状态
-    if (outCanvas && outCanvas.width) {
+    // 已有结果则刷新网格与按钮状态（需确保是拼豆生成的结果）
+    if (outCanvas && outCanvas.width && perlerSmallCanvas) {
       pegGridBtn.disabled = false;
       pegGridBtn.textContent = t('perler.grid.on');
       pegGridBtn.classList.add('is-active');
       perlerBtn.disabled = false;
       beadListBtn.disabled = false;
       drawPegGrid();
+    } else {
+      pegGridBtn.disabled = true;
+      perlerBtn.disabled = true;
+      beadListBtn.disabled = true;
     }
   } else {
     buildDensityOptions(NORMAL_DENSITY, '64');
@@ -1718,7 +1722,7 @@ if (modeSeg) modeSeg.querySelectorAll('.seg__btn').forEach(b => b.addEventListen
 // 把 pegboard 网格叠加到结果预览上（每格 = 1 颗豆）
 function drawPegGrid() {
   if (!pegOverlay) return;
-  if (!perlerMode || !perlerGridOn || !outCanvas.width) { pegOverlay.hidden = true; return; }
+  if (!perlerMode || !perlerGridOn || !outCanvas.width || !perlerSmallCanvas) { pegOverlay.hidden = true; return; }
   const w = outCanvas.width, h = outCanvas.height, s = lastScale;
   pegOverlay.width = w; pegOverlay.height = h;
   pegOverlay.hidden = false;
