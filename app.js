@@ -785,7 +785,7 @@ function download() {
 // 用户从 Stripe 后台创建一个 $0.99 的 Payment Link，并在「支付完成后跳转地址」里配置：
 //   https://pixcutstudio.netlify.app/?paid=1
 // 把链接粘到下面 STRIPE_PAYMENT_LINK 即可启用。
-const STRIPE_PAYMENT_LINK = ''; // ← 填入你的 Stripe Payment Link，例如 'https://buy.stripe.com/xxxxx'
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_6oU8wl2aC5CH7KVaqUffy00'; // ← Stripe 沙盒 Payment Link
 const CLEAN_UNLOCK_KEY = 'pixelcut_clean_unlocked';
 
 // 直接导出干净版（不加水印）
