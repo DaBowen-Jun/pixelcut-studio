@@ -4,4 +4,4 @@ pages-build-output-dir = "."
 
 [[kv_namespaces]]
 binding = "BUCKET"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "775e5785d18b4a24926533ec4b8d7871"
