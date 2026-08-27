@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PixelCut Studio · 照片变像素艺术 | 8-bit Pixel Art Generator</title>
-  <meta name="description" content="上传照片，浏览器本地一键生成 8-bit 像素卡通头像。免费、离线、隐私安全。6 种风格：霓虹、波普、赛博朋克、水墨、复古、热成像。| Turn photos into 8-bit pixel art — free, offline, private. 6 styles: Neon, Pop, Cyberpunk, Ink, Vintage, Thermal." />
+  <meta name="description" content="上传照片，浏览器本地一键生成 8-bit 像素卡通头像。免费、离线、隐私安全。6 种风格：原图、霓虹、波普、赛博朋克、复古、热成像。| Turn photos into 8-bit pixel art — free, offline, private. 6 styles: Original, Neon, Pop, Cyberpunk, Vintage, Thermal." />
   <meta name="keywords" content="像素头像, 像素艺术, 8-bit, pixel art, avatar maker, pixel avatar, 照片转像素, photo to pixel, neon portrait, cyberpunk, pop art" />
   <meta name="theme-color" content="#ff2e93" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -158,15 +158,6 @@
         </figure>
         <figure class="example-card">
           <div class="example-card__frame">
-            <img src="assets/examples/example-ink.jpg" alt="水墨素描效果" loading="lazy" />
-          </div>
-          <figcaption>
-            <span class="example-card__tag" data-i18n="style.ink">水墨素描</span>
-            <span class="example-card__en">Ink</span>
-          </figcaption>
-        </figure>
-        <figure class="example-card">
-          <div class="example-card__frame">
             <img src="assets/examples/example-sepia.jpg" alt="复古胶片效果" loading="lazy" />
           </div>
           <figcaption>
@@ -212,7 +203,6 @@
                 <option value="neon" selected>🌈 霓虹肖像 Neon</option>
                 <option value="pop">🎨 波普艺术 Pop</option>
                 <option value="cyber">🤖 赛博朋克 Cyberpunk</option>
-                <option value="ink">🖌 水墨素描 Ink</option>
                 <option value="vintage">📷 复古胶片 Vintage</option>
                 <option value="thermal">🌡 热成像 Thermal</option>
               </select>
@@ -330,12 +320,6 @@
           <span class="style-card__name" data-i18n="style.cyber">赛博朋克</span>
           <span class="style-card__en">Cyberpunk</span>
           <span class="style-card__desc" data-i18n="style.cyber.desc">冷色霓虹 + CRT 扫描线</span>
-        </button>
-        <button class="style-card" data-style="ink" style="--c1:#2b2e3c;--c2:#9a8c7a">
-          <span class="style-card__art"></span>
-          <span class="style-card__name" data-i18n="style.ink">水墨素描</span>
-          <span class="style-card__en">Ink</span>
-          <span class="style-card__desc" data-i18n="style.ink.desc">纸墨分层 · 东方韵味</span>
         </button>
         <button class="style-card" data-style="vintage" style="--c1:#b07a43;--c2:#e9c79c">
           <span class="style-card__art"></span>

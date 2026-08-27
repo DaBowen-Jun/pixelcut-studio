@@ -48,7 +48,6 @@ const TAOBAO_STYLE_KEYWORDS = {
   neon:    '像素风霓虹插画定制',
   pop:     '波普艺术海报定制',
   cyber:   '赛博朋克插画定制',
-  ink:     '水墨插画定制',
   vintage: '复古风插画定制',
   thermal: '数字艺术定制'
 };
@@ -57,7 +56,6 @@ const APPSUMO_STYLE_SLUGS = {
   neon:    'canva',
   pop:     'canva',
   cyber:   'figma',
-  ink:     'kittl',
   vintage: 'envato-elements',
   thermal: 'design'
 };
@@ -97,10 +95,10 @@ const I18N = {
     'examples.title': '真实转换效果', 'examples.subtitle': '同一张照片，六种热门风格一键变身像素艺术。',
     'gallery.title': '六种风格，总有一款适合你', 'gallery.subtitle': '点击下方任意风格卡片，立即在上方创作区套用并预览。',
     'style.neon': '霓虹肖像', 'style.pop': '波普艺术', 'style.cyber': '赛博朋克',
-    'style.ink': '水墨素描', 'style.vintage': '复古胶片', 'style.thermal': '热成像',
+    'style.vintage': '复古胶片', 'style.thermal': '热成像',
     'style.neon.desc': '高饱和分块 · 赛博潮味',
     'style.pop.desc': '扁平色块 · 海报感', 'style.cyber.desc': '冷色霓虹 + CRT 扫描线',
-    'style.ink.desc': '纸墨分层 · 东方韵味', 'style.vintage.desc': '怀旧 sepia 棕调', 'style.thermal.desc': '红外渐变 · 科技感',
+    'style.vintage.desc': '怀旧 sepia 棕调', 'style.thermal.desc': '红外渐变 · 科技感',
     'how.title': '三步，照片变像素', 'how.subtitle': '全程无需任何技术背景，打开网页就能玩。',
     'how.s1.t': '上传照片', 'how.s1.d': '拖拽或点击选择本地图片，立即显示预览。',
     'how.s2.t': '挑选风格', 'how.s2.d': '六种风格自由切换，调节像素密度与配色。',
@@ -109,7 +107,7 @@ const I18N = {
     'feat.privacy.t': '隐私优先', 'feat.privacy.d': '所有处理在浏览器本地完成，照片从不离开你的设备。',
     'feat.free.t': '完全免费', 'feat.free.d': '零成本、零依赖、无需 API Key，打开网页直接用。',
     'feat.fast.t': '秒级生成', 'feat.fast.d': '纯 Canvas 算法，无需联网等待，即时出图。',
-    'feat.styles.t': '风格丰富', 'feat.styles.d': '霓虹肖像、波普艺术、赛博朋克、水墨、热成像，一应俱全。',
+    'feat.styles.t': '风格丰富', 'feat.styles.d': '原图、霓虹肖像、波普艺术、赛博朋克、复古胶片、热成像，一应俱全。',
     'footer.note': '纯前端像素艺术工具 · 所有图像均在本地处理，不上传服务器。',
     'upload.text.html': '拖拽图片到此处，或 <span class="link">点击选择</span>',
     'download': '⬇ 下载',
@@ -199,10 +197,10 @@ const I18N = {
     'examples.title': 'Real conversion results', 'examples.subtitle': 'The same photo, six hot styles turned into pixel art with one tap.',
     'gallery.title': 'Six styles, pick your vibe', 'gallery.subtitle': 'Tap any style card to apply it in the studio above.',
     'style.neon': 'Neon', 'style.pop': 'Pop', 'style.cyber': 'Cyberpunk',
-    'style.ink': 'Ink', 'style.vintage': 'Vintage', 'style.thermal': 'Thermal',
+    'style.vintage': 'Vintage', 'style.thermal': 'Thermal',
     'style.neon.desc': 'High-sat blocks · cyber edge',
     'style.pop.desc': 'Flat blocks · poster feel', 'style.cyber.desc': 'Cool neon + CRT scanlines',
-    'style.ink.desc': 'Paper & ink layers · oriental', 'style.vintage.desc': 'Nostalgic sepia tone', 'style.thermal.desc': 'Infrared gradient · tech',
+    'style.vintage.desc': 'Nostalgic sepia tone', 'style.thermal.desc': 'Infrared gradient · tech',
     'how.title': 'Three steps to pixel', 'how.subtitle': 'No tech skills needed — just open the page.',
     'how.s1.t': 'Upload', 'how.s1.d': 'Drag or click to pick a local image, preview instantly.',
     'how.s2.t': 'Pick a style', 'how.s2.d': 'Switch among 6 styles and tune density & colors.',
@@ -211,7 +209,7 @@ const I18N = {
     'feat.privacy.t': 'Privacy first', 'feat.privacy.d': 'All processing is local. Your photo never leaves the device.',
     'feat.free.t': 'Completely free', 'feat.free.d': 'Zero cost, zero deps, no API key — just open and use.',
     'feat.fast.t': 'Instant', 'feat.fast.d': 'Pure Canvas math, no waiting on a server.',
-    'feat.styles.t': 'Rich styles', 'feat.styles.d': 'Neon, pop, cyberpunk, ink, thermal — all included.',
+    'feat.styles.t': 'Rich styles', 'feat.styles.d': 'Original, neon, pop, cyberpunk, vintage & thermal — all included.',
     'footer.note': 'A pure front-end pixel art tool · images are processed locally, never uploaded.',
     'upload.text.html': 'Drag an image here, or <span class="link">click to choose</span>',
     'download': '⬇ Download',
@@ -289,7 +287,6 @@ const STYLE_NAMES = {
   neon:    { zh: '🌈 霓虹肖像', en: '🌈 Neon' },
   pop:     { zh: '🎨 波普艺术', en: '🎨 Pop' },
   cyber:   { zh: '🤖 赛博朋克', en: '🤖 Cyberpunk' },
-  ink:     { zh: '🖌 水墨素描', en: '🖌 Ink' },
   vintage: { zh: '📷 复古胶片', en: '📷 Vintage' },
   thermal: { zh: '🌡 热成像', en: '🌡 Thermal' },
 };
@@ -716,20 +713,6 @@ function processStyle(style, data, colorCount, saturation, contrast) {
     case 'thermal':
       mapGradient(data, PALETTES.thermal, colorCount);
       break;
-    case 'ink': {
-      // 水墨：纸为底、墨为形，按亮度分层
-      const paper = [244, 240, 228];
-      const ink = [28, 30, 44];
-      for (let i = 0; i < data.length; i += 4) {
-        const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-        const t = Math.min(1, Math.round((lum / 255) * colorCount) / colorCount); // 1=亮
-        const f = 1 - t; // 暗处转墨
-        data[i]     = Math.round(paper[0] * t + ink[0] * f);
-        data[i + 1] = Math.round(paper[1] * t + ink[1] * f);
-        data[i + 2] = Math.round(paper[2] * t + ink[2] * f);
-      }
-      break;
-    }
     case 'vintage': {
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i], g = data[i + 1], b = data[i + 2];
@@ -1083,7 +1066,6 @@ const STYLE_PRESETS = {
   neon:    { d: '64', c: 8,  sat: 180, con: 130, out: false },
   pop:     { d: '64', c: 5,  sat: 160, con: 140, out: false },
   cyber:   { d: '64', c: 8,  sat: 170, con: 140, out: false },
-  ink:     { d: '64', c: 8,  sat: 100, con: 120, out: true },
   vintage: { d: '96', c: 12, sat: 120, con: 115, out: false },
   thermal: { d: '64', c: 12, sat: 100, con: 130, out: false },
 };
