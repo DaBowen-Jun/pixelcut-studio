@@ -12,6 +12,7 @@ const outCanvas = $('outCanvas');
 const generateBtn = $('generateBtn');
 const downloadBtn = $('downloadBtn');
 const cleanDownloadBtn = $('cleanDownloadBtn');
+const merchBtn = $('merchBtn');
 const resetBtn = $('resetBtn');
 const densitySel = $('density');
 const scaleSlider = $('scale');
@@ -150,7 +151,17 @@ const I18N = {
     'community.share': '🖼 分享到社区',
     'community.shared': '✅ 已分享到社区画廊！',
     'community.sharedShort': '已分享',
-    'community.shareFail': '⚠️ 分享失败，请重试'
+    'community.shareFail': '⚠️ 分享失败，请重试',
+    'merch.btn': '📱 预览周边',
+    'merch.title': '把头像变成专属周边',
+    'merch.subtitle': '生成像素头像后，一键预览它印在手机壳、马克杯、T 恤、海报上的样子，还能保存效果图分享给朋友。',
+    'merch.cta': '🎨 先生成头像',
+    'merch.tab.phone': '手机壳', 'merch.tab.mug': '马克杯', 'merch.tab.tee': 'T 恤', 'merch.tab.poster': '海报',
+    'merch.save': '⬇ 保存效果图', 'merch.order': '🛒 定制真机壳',
+    'merch.orderSoon': '定制购买即将上线，先把效果图保存到相册分享给朋友吧～',
+    'merch.tip': '创意预览 · 实际产品以成品为准',
+    'merch.example.t': '先看看效果',
+    'merch.example.d': '你的头像印在手机壳上，是不是很有感觉？生成一张就能预览同款。'
   },
   en: {
     brand: 'PixelCut Studio',
@@ -225,7 +236,17 @@ const I18N = {
     'community.share': '🖼 Share to Community',
     'community.shared': '✅ Shared to the community gallery!',
     'community.sharedShort': 'Shared',
-    'community.shareFail': '⚠️ Share failed. Try again.'
+    'community.shareFail': '⚠️ Share failed. Try again.',
+    'merch.btn': '📱 Preview merch',
+    'merch.title': 'Turn your avatar into merch',
+    'merch.subtitle': 'After generating, preview your pixel avatar printed on a phone case, mug, T-shirt or poster — and save the mockup to share.',
+    'merch.cta': '🎨 Generate first',
+    'merch.tab.phone': 'Phone case', 'merch.tab.mug': 'Mug', 'merch.tab.tee': 'T-shirt', 'merch.tab.poster': 'Poster',
+    'merch.save': '⬇ Save mockup', 'merch.order': '🛒 Order real product',
+    'merch.orderSoon': 'Ordering is coming soon — save the mockup to your album and share it with friends for now!',
+    'merch.tip': 'Creative preview · actual product may vary',
+    'merch.example.t': 'See the idea first',
+    'merch.example.d': 'Your avatar on a phone case — pretty cool, right? Generate one to preview the same.'
   }
 };
 
@@ -328,6 +349,7 @@ function generate() {
       downloadBtn.disabled = false;
       downloadBtn.dataset.ready = '1';
       cleanDownloadBtn.disabled = false;
+      if (merchBtn) merchBtn.disabled = false;
       const dims = out.width + '×' + out.height;
       const styleLabel = (STYLE_NAMES[style] && STYLE_NAMES[style][currentLang]) || style;
       statusEl.textContent = t('status.done')
@@ -1344,4 +1366,174 @@ if (communityLightboxClose) communityLightboxClose.addEventListener('click', clo
 if (communityLightbox) communityLightbox.addEventListener('click', (e) => { if (e.target === communityLightbox) closeCommunityLightbox(); });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { closeCommunity(); closeCommunityLightbox(); }
+});
+
+// ---------- 周边预览（手机壳 / 马克杯 / T恤 / 海报）----------
+// 把当前像素头像用 Canvas 程序化合成到各类产品 mockup 上，供用户预览 + 保存分享。
+// 接入真实购买：把 MERCH_STORE_URL 填成 Printful / 自有店铺链接即可启用「定制真机壳」按钮。
+const MERCH_STORE_URL = '';
+let currentMerchType = 'phone';
+
+const merchModal = $('merchModal');
+const merchBackdrop = $('merchBackdrop');
+const merchClose = $('merchClose');
+const merchCanvas = $('merchCanvas');
+const merchSave = $('merchSave');
+const merchOrder = $('merchOrder');
+const merchTabs = Array.from(document.querySelectorAll('.merch__tab'));
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// 以 cover 方式把图像绘制进目标矩形（保持比例、居中裁剪）
+function coverDraw(ctx, img, dx, dy, dw, dh) {
+  const iw = img.width || img.naturalWidth || dw;
+  const ih = img.height || img.naturalHeight || dh;
+  const scale = Math.max(dw / iw, dh / ih);
+  const sw = dw / scale, sh = dh / scale;
+  const sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+  ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+}
+
+function drawMerch(type) {
+  if (!merchCanvas) return;
+  const ctx = merchCanvas.getContext('2d');
+  const S = 600;
+  ctx.clearRect(0, 0, S, S);
+  const avatar = outCanvas;
+  if (!avatar || !avatar.width) return;
+
+  if (type === 'phone') {
+    const mx = 175, my = 40, mw = 250, mh = 520, mr = 40;
+    const grad = ctx.createLinearGradient(mx, my, mx + mw, my + mh);
+    grad.addColorStop(0, '#ff2e93'); grad.addColorStop(1, '#7a2bff');
+    roundRect(ctx, mx, my, mw, mh, mr);
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.stroke();
+    // 摄像头模组（左上）
+    roundRect(ctx, mx + 22, my + 22, 66, 66, 16);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fill();
+    [[mx+41,my+41],[mx+79,my+41],[mx+41,my+79]].forEach(([cx,cy]) => {
+      ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI*2); ctx.fillStyle = '#1b1d2a'; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx-3, cy-3, 4, 0, Math.PI*2); ctx.fillStyle = 'rgba(120,200,255,0.9)'; ctx.fill();
+    });
+    // 头像区（避开摄像头，居中偏下）
+    const ax = mx + 18, ay = my + 150, aw = mw - 36, ah = mh - 178;
+    roundRect(ctx, ax, ay, aw, ah, 18);
+    ctx.save(); ctx.clip();
+    coverDraw(ctx, avatar, ax, ay, aw, ah);
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.font = '700 22px Inter, "Noto Sans SC", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('PixelCut', mx + mw/2, my + mh - 26);
+  } else if (type === 'mug') {
+    const mx = 175, my = 130, mw = 230, mh = 320, mr = 18;
+    const grad = ctx.createLinearGradient(mx, my, mx, my + mh);
+    grad.addColorStop(0, '#ffffff'); grad.addColorStop(1, '#eef1f6');
+    roundRect(ctx, mx, my, mw, mh, mr);
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(20,22,40,0.18)'; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(mx + mw/2, my, mw/2, 16, 0, 0, Math.PI*2); ctx.fillStyle = '#d6dae3'; ctx.fill();
+    ctx.beginPath(); ctx.arc(mx + mw + 6, my + mh/2 - 10, 46, -Math.PI/2, Math.PI/2);
+    ctx.lineWidth = 18; ctx.strokeStyle = '#eef1f6'; ctx.stroke();
+    const ax = mx + 22, ay = my + 30, aw = mw - 44, ah = mh - 64;
+    roundRect(ctx, ax, ay, aw, ah, 10);
+    ctx.save(); ctx.clip();
+    coverDraw(ctx, avatar, ax, ay, aw, ah);
+    ctx.restore();
+  } else if (type === 'tee') {
+    const cx = 300, top = 120, w = 300, h = 380;
+    ctx.beginPath();
+    ctx.moveTo(cx - 60, top + 50);
+    ctx.lineTo(cx - w/2, top + 90);
+    ctx.lineTo(cx - w/2 + 20, top + 150);
+    ctx.lineTo(cx - 90, top + 130);
+    ctx.lineTo(cx - 90, top + h);
+    ctx.lineTo(cx + 90, top + h);
+    ctx.lineTo(cx + 90, top + 130);
+    ctx.lineTo(cx + w/2 - 20, top + 150);
+    ctx.lineTo(cx + w/2, top + 90);
+    ctx.lineTo(cx + 60, top + 50);
+    ctx.quadraticCurveTo(cx, top + 95, cx - 60, top + 50);
+    ctx.closePath();
+    ctx.fillStyle = '#2b2e3c'; ctx.fill();
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 60, top + 50);
+    ctx.quadraticCurveTo(cx, top + 95, cx + 60, top + 50);
+    ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.stroke();
+    const ax = cx - 80, ay = top + 120, aw = 160, ah = 160;
+    roundRect(ctx, ax, ay, aw, ah, 12);
+    ctx.save(); ctx.clip();
+    coverDraw(ctx, avatar, ax, ay, aw, ah);
+    ctx.restore();
+  } else if (type === 'poster') {
+    const fx = 130, fy = 60, fw = 340, fh = 470, fr = 8;
+    roundRect(ctx, fx, fy, fw, fh, fr);
+    ctx.fillStyle = '#0b0d1a'; ctx.fill();
+    ctx.lineWidth = 10; ctx.strokeStyle = '#ff2e93'; ctx.stroke();
+    const ax = fx + 24, ay = fy + 24, aw = fw - 48, ah = 300;
+    roundRect(ctx, ax, ay, aw, ah, 4);
+    ctx.save(); ctx.clip();
+    coverDraw(ctx, avatar, ax, ay, aw, ah);
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.font = '700 20px Inter, "Noto Sans SC", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('PixelCut · 你的像素头像', fx + fw/2, fy + fh - 28);
+  }
+}
+
+function openMerch() {
+  if (!outCanvas || !outCanvas.width) {
+    if (statusEl) statusEl.textContent = '⚠️ ' + t('merch.cta') + ' / ' + (I18N[currentLang].merch ? '请先生成像素头像' : 'generate first');
+    return;
+  }
+  if (merchModal) { merchModal.hidden = false; localizeElement(merchModal); }
+  if (merchBackdrop) merchBackdrop.hidden = false;
+  currentMerchType = 'phone';
+  merchTabs.forEach(b => b.classList.toggle('is-active', b.dataset.merch === 'phone'));
+  drawMerch('phone');
+}
+function closeMerch() {
+  if (merchModal) merchModal.hidden = true;
+  if (merchBackdrop) merchBackdrop.hidden = true;
+}
+
+if (merchBtn) merchBtn.addEventListener('click', openMerch);
+if (merchClose) merchClose.addEventListener('click', closeMerch);
+if (merchBackdrop) merchBackdrop.addEventListener('click', closeMerch);
+merchTabs.forEach(b => b.addEventListener('click', () => {
+  currentMerchType = b.dataset.merch;
+  merchTabs.forEach(x => x.classList.toggle('is-active', x === b));
+  drawMerch(currentMerchType);
+}));
+if (merchSave) merchSave.addEventListener('click', () => {
+  if (!merchCanvas) return;
+  const link = document.createElement('a');
+  link.download = 'pixelcut-merch-' + currentMerchType + '.png';
+  link.href = merchCanvas.toDataURL('image/png');
+  link.click();
+});
+if (merchOrder) merchOrder.addEventListener('click', () => {
+  if (MERCH_STORE_URL) {
+    window.open(MERCH_STORE_URL, '_blank', 'noopener');
+  } else {
+    const tip = document.createElement('div');
+    tip.className = 'paid-toast';
+    tip.textContent = t('merch.orderSoon');
+    document.body.appendChild(tip);
+    requestAnimationFrame(() => tip.classList.add('paid-toast--visible'));
+    setTimeout(() => { tip.classList.remove('paid-toast--visible'); setTimeout(() => tip.remove(), 400); }, 4500);
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && merchModal && !merchModal.hidden) closeMerch();
 });

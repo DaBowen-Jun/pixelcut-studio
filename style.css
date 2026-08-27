@@ -985,3 +985,83 @@ main { position: relative; z-index: 2; }
   border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer;
 }
 .community-lightbox__close:hover { background: var(--surface-2); }
+
+/* ===== 周边创意展示区（首页） ===== */
+.merch { padding: 72px 0; }
+.merch__grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
+  max-width: 880px; margin: 28px auto 0;
+}
+.merch__card { text-align: center; }
+.merch__device {
+  position: relative; margin: 0 auto 12px; width: 100%; max-width: 200px; aspect-ratio: 3 / 4;
+  background: #15182e; border: 1px solid var(--border); border-radius: 22px; overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.merch__device img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.merch__device--phone { border-radius: 30px; aspect-ratio: 9 / 18; max-width: 150px; }
+.merch__cam {
+  position: absolute; top: 12px; left: 12px; width: 34px; height: 34px; border-radius: 10px;
+  background: rgba(0,0,0,.45); box-shadow: 0 0 0 2px rgba(255,255,255,.15); z-index: 2;
+}
+.merch__device--mug { aspect-ratio: 4 / 5; max-width: 168px; border-radius: 14px; }
+.merch__handle {
+  position: absolute; right: -15px; top: 50%; transform: translateY(-50%);
+  width: 30px; height: 54px; border: 9px solid #1a1d33; border-left: none;
+  border-radius: 0 24px 24px 0; z-index: 1;
+}
+.merch__device--tee {
+  aspect-ratio: 1 / 1; max-width: 180px; border: none; background: transparent; box-shadow: none; overflow: visible;
+}
+.merch__device--tee img {
+  clip-path: polygon(50% 0, 62% 9%, 100% 15%, 100% 31%, 82% 31%, 82% 100%, 18% 100%, 18% 31%, 0 31%, 0 15%, 38% 9%);
+  border-radius: 6px; object-fit: cover;
+}
+.merch__card figcaption { font-size: 14px; font-weight: 600; color: var(--ink-soft); }
+.merch__cta { text-align: center; margin-top: 26px; }
+
+/* ===== 周边预览浮层 ===== */
+.merch-backdrop {
+  position: fixed; inset: 0; z-index: 1000; background: rgba(6, 8, 18, .72);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.merch-backdrop[hidden] { display: none; }
+.merch-modal {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1001;
+  width: min(520px, 92vw); max-height: 92vh; overflow: auto;
+  background: linear-gradient(160deg, rgba(28,22,52,.96), rgba(14,16,34,.98));
+  border: 1px solid var(--border-strong); border-radius: 22px; padding: 20px;
+  box-shadow: var(--shadow-md); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  animation: sharePop .25s ease;
+}
+.merch-modal[hidden] { display: none; }
+.merch-modal__head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 14px;
+}
+.merch-modal__close {
+  width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink-soft); font-size: 18px; line-height: 1; cursor: pointer; transition: all .2s;
+}
+.merch-modal__close:hover { color: var(--ink); background: var(--surface-2); }
+.merch__tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.merch__tab {
+  padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink-soft); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s;
+}
+.merch__tab:hover { color: var(--ink); border-color: var(--border-strong); }
+.merch__tab.is-active { background: var(--grad); color: #fff; border-color: transparent; }
+.merch-modal__stage { display: flex; justify-content: center; }
+.merch-modal__stage canvas {
+  width: 100%; max-width: 360px; height: auto; image-rendering: pixelated; border-radius: 14px;
+  background: #0d0b1f; box-shadow: var(--shadow-sm);
+}
+.merch-modal__tip { text-align: center; font-size: 12px; color: var(--ink-faint); margin: 12px 0 14px; }
+.merch-modal__actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  .merch__grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .merch__device { max-width: 108px; }
+  .merch__device--phone { max-width: 90px; }
+  .merch__device--tee { max-width: 116px; }
+}

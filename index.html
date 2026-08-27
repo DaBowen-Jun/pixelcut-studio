@@ -263,6 +263,7 @@
             </div>
             <button id="downloadBtn" class="btn btn--accent" disabled data-i18n="btn.download">⬇ 下载 PNG</button>
             <button id="cleanDownloadBtn" class="btn btn--premium" disabled data-i18n="btn.clean">💎 下载无水印（免费）</button>
+            <button id="merchBtn" class="btn btn--ghost" disabled data-i18n="merch.btn">📱 预览周边</button>
             <button id="shareBtn" class="btn btn--ghost" data-i18n="btn.share">🔗 分享</button>
             <button id="shareGalleryBtn" class="btn btn--accent" data-i18n="community.share">🖼 分享到社区</button>
             <button id="resetBtn" class="btn btn--ghost" data-i18n="btn.reset">↺ 重新上传</button>
@@ -390,6 +391,39 @@
           <h3 data-i18n="feat.styles.t">风格丰富</h3>
           <p data-i18n="feat.styles.d">从复古游戏到赛博朋克、水墨、热成像，一应俱全。</p>
         </div>
+      </div>
+    </section>
+
+    <!-- 周边创意：把头像印到手机壳/马克杯/T恤（首页展示 + 引导预览） -->
+    <section id="merch" class="merch">
+      <div class="section-head">
+        <h2 class="section-title" data-i18n="merch.title">把头像变成专属周边</h2>
+        <p class="section-desc" data-i18n="merch.subtitle">生成像素头像后，一键预览它印在手机壳、马克杯、T 恤上的样子，还能保存效果图分享给朋友。</p>
+      </div>
+      <div class="merch__grid">
+        <figure class="merch__card">
+          <div class="merch__device merch__device--phone">
+            <span class="merch__cam"></span>
+            <img src="assets/examples/example-neon.jpg" alt="手机壳示例" loading="lazy" />
+          </div>
+          <figcaption data-i18n="merch.tab.phone">手机壳</figcaption>
+        </figure>
+        <figure class="merch__card">
+          <div class="merch__device merch__device--mug">
+            <span class="merch__handle"></span>
+            <img src="assets/examples/example-pop.jpg" alt="马克杯示例" loading="lazy" />
+          </div>
+          <figcaption data-i18n="merch.tab.mug">马克杯</figcaption>
+        </figure>
+        <figure class="merch__card">
+          <div class="merch__device merch__device--tee">
+            <img src="assets/examples/example-cyber.png" alt="T恤示例" loading="lazy" />
+          </div>
+          <figcaption data-i18n="merch.tab.tee">T 恤</figcaption>
+        </figure>
+      </div>
+      <div class="merch__cta">
+        <a class="btn btn--primary" href="#studio" data-i18n="merch.cta">🎨 先生成头像</a>
       </div>
     </section>
 
@@ -524,6 +558,29 @@
     <div class="community-lightbox" id="communityLightbox" hidden>
       <button class="community-lightbox__close" id="communityLightboxClose" aria-label="Close">×</button>
       <img id="communityLightboxImg" alt="community work" />
+    </div>
+  </div>
+
+  <!-- 周边预览浮层：把当前像素头像合成到手机壳/马克杯/T恤/海报上 -->
+  <div class="merch-backdrop" id="merchBackdrop" hidden></div>
+  <div class="merch-modal" id="merchModal" role="dialog" aria-modal="true" aria-label="Merch preview" hidden>
+    <div class="merch-modal__head">
+      <span data-i18n="merch.title">把头像变成专属周边</span>
+      <button class="merch-modal__close" id="merchClose" aria-label="Close">×</button>
+    </div>
+    <div class="merch__tabs">
+      <button class="merch__tab is-active" data-merch="phone" data-i18n="merch.tab.phone">手机壳</button>
+      <button class="merch__tab" data-merch="mug" data-i18n="merch.tab.mug">马克杯</button>
+      <button class="merch__tab" data-merch="tee" data-i18n="merch.tab.tee">T 恤</button>
+      <button class="merch__tab" data-merch="poster" data-i18n="merch.tab.poster">海报</button>
+    </div>
+    <div class="merch-modal__stage">
+      <canvas id="merchCanvas" width="600" height="600"></canvas>
+    </div>
+    <p class="merch-modal__tip" data-i18n="merch.tip">创意预览 · 实际产品以成品为准</p>
+    <div class="merch-modal__actions">
+      <button class="btn btn--accent" id="merchSave" data-i18n="merch.save">⬇ 保存效果图</button>
+      <button class="btn btn--ghost" id="merchOrder" data-i18n="merch.order">🛒 定制真机壳</button>
     </div>
   </div>
 
