@@ -285,7 +285,7 @@ const I18N = {
 };
 
 const STYLE_NAMES = {
-  original:{ zh: '📷 原图像素', en: '📷 Original' },
+  original:{ zh: '📷 原图', en: '📷 Original' },
   neon:    { zh: '🌈 霓虹肖像', en: '🌈 Neon' },
   pop:     { zh: '🎨 波普艺术', en: '🎨 Pop' },
   cyber:   { zh: '🤖 赛博朋克', en: '🤖 Cyberpunk' },
@@ -1089,7 +1089,8 @@ const STYLE_PRESETS = {
 };
 styleSel.addEventListener('change', () => {
   const r = STYLE_PRESETS[styleSel.value] || {};
-  if (r.d) densitySel.value = r.d;
+  // 拼豆模式密度由专属档位（16/24/29/32/48）控制，不能被标准预设（如 64）覆盖，否则下拉被塞非法值而显示错乱
+  if (!perlerMode && r.d) densitySel.value = r.d;
   if (r.c) colorsSlider.value = r.c;
   if (r.sat) satSlider.value = r.sat;
   if (r.con) conSlider.value = r.con;
@@ -1716,7 +1717,8 @@ function applyMode() {
     buildDensityOptions(PERLER_DENSITY, '29');
     if (pegOverlay) pegOverlay.hidden = !perlerGridOn;
     const hint = $('perlerHint'); if (hint) hint.hidden = false;
-    // 拼豆默认使用「原图像素」风格，避免霓虹/波普等艺术风格把脸搞花
+    // 拼豆默认推荐「原图」风格（最贴近真实颜色，适合摆豆）；但允许切换到其他风格，不再锁死
+    if (styleSel) styleSel.disabled = false; // 保险：确保风格下拉始终可选
     if (styleSel && styleSel.value !== 'original') {
       styleSel.value = 'original';
       styleSel.dispatchEvent(new Event('change'));
