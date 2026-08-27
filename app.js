@@ -11,6 +11,7 @@ const srcCanvas = $('srcCanvas');
 const outCanvas = $('outCanvas');
 const generateBtn = $('generateBtn');
 const downloadBtn = $('downloadBtn');
+const cleanDownloadBtn = $('cleanDownloadBtn');
 const resetBtn = $('resetBtn');
 const densitySel = $('density');
 const scaleSlider = $('scale');
@@ -111,6 +112,9 @@ const I18N = {
     'footer.note': '纯前端像素艺术工具 · 所有图像均在本地处理，不上传服务器。',
     'upload.text.html': '拖拽图片到此处，或 <span class="link">点击选择</span>',
     'download': '⬇ 下载',
+    'btn.clean': '💎 下载无水印 $0.99',
+    'btn.clean.unlocked': '✨ 下载无水印（已解锁）',
+    'paid.welcome': '✨ 感谢支持！干净版下载已在本浏览器解锁。',
     'status.loaded': '已加载，点击「生成像素形象」开始转换。',
     'status.loading': '⏳ 正在生成…',
     'status.done': '✅ 完成：{dims} 像素块 · {style} · {colors} 色层',
@@ -183,6 +187,9 @@ const I18N = {
     'footer.note': 'A pure front-end pixel art tool · images are processed locally, never uploaded.',
     'upload.text.html': 'Drag an image here, or <span class="link">click to choose</span>',
     'download': '⬇ Download',
+    'btn.clean': '💎 Download clean (no watermark) $0.99',
+    'btn.clean.unlocked': '✨ Download clean (unlocked)',
+    'paid.welcome': '✨ Thanks for supporting! Clean download unlocked in this browser.',
     'status.loaded': 'Loaded. Click "Generate" to start.',
     'status.loading': 'Generating…',
     'status.done': '✅ Done: {dims} pixels · {style} · {colors} color steps',
@@ -320,6 +327,7 @@ function generate() {
 
       downloadBtn.disabled = false;
       downloadBtn.dataset.ready = '1';
+      cleanDownloadBtn.disabled = false;
       const dims = out.width + '×' + out.height;
       const styleLabel = (STYLE_NAMES[style] && STYLE_NAMES[style][currentLang]) || style;
       statusEl.textContent = t('status.done')
@@ -773,9 +781,88 @@ function download() {
   link.click();
 }
 
+// ---------- 干净版下载（Stripe Payment Links，无后端）----------
+// 用户从 Stripe 后台创建一个 $0.99 的 Payment Link，并在「支付完成后跳转地址」里配置：
+//   https://pixcutstudio.netlify.app/?paid=1
+// 把链接粘到下面 STRIPE_PAYMENT_LINK 即可启用。
+const STRIPE_PAYMENT_LINK = ''; // ← 填入你的 Stripe Payment Link，例如 'https://buy.stripe.com/xxxxx'
+const CLEAN_UNLOCK_KEY = 'pixelcut_clean_unlocked';
+
+// 直接导出干净版（不加水印）
+function cleanDownload() {
+  if (outCanvas.width === 0) return;
+  const type = formatSel.value;
+  const ext = formatSel.selectedOptions[0].getAttribute('data-ext') || 'png';
+  const quality = type === 'image/png' ? undefined : 0.95;
+  const dataUrl = outCanvas.toDataURL(type, quality);
+  const link = document.createElement('a');
+  link.download = 'pixel-avatar-clean.' + ext;
+  link.href = dataUrl;
+  link.click();
+}
+
+// 检测是否已解锁干净版下载（URL ?paid=1 或 localStorage）
+function detectCleanUnlock() {
+  try {
+    const u = new URL(location.href);
+    if (u.searchParams.get('paid') === '1') {
+      localStorage.setItem(CLEAN_UNLOCK_KEY, '1');
+      // 清除 URL 参数，保持地址栏干净
+      u.searchParams.delete('paid');
+      const clean = u.pathname + (u.searchParams.toString() ? '?' + u.searchParams.toString() : '') + u.hash;
+      history.replaceState({}, '', clean);
+      // 在状态区显示欢迎
+      const st = $('status');
+      if (st) st.textContent = t('paid.welcome');
+      return true;
+    }
+  } catch (e) {}
+  return localStorage.getItem(CLEAN_UNLOCK_KEY) === '1';
+}
+
+function applyCleanUnlockedUI() {
+  if (!detectCleanUnlock()) return;
+  if (!cleanDownloadBtn) return;
+  cleanDownloadBtn.textContent = t('btn.clean.unlocked');
+  cleanDownloadBtn.dataset.unlocked = '1';
+  // 顶部浮窗提示（无论有没有图都看得到）
+  showPaidToast();
+}
+
+function showPaidToast() {
+  // 避免重复叠加（同一会话多次跳转）
+  if (document.querySelector('.paid-toast')) return;
+  const el = document.createElement('div');
+  el.className = 'paid-toast';
+  el.textContent = t('paid.welcome');
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('paid-toast--visible'));
+  setTimeout(() => {
+    el.classList.remove('paid-toast--visible');
+    setTimeout(() => el.remove(), 400);
+  }, 4500);
+}
+
+// 打开 Stripe 支付（新标签页，避免丢失当前生成的图）
+function openStripeCheckout() {
+  if (!STRIPE_PAYMENT_LINK) {
+    statusEl.textContent = '⚠️ 支付链接未配置，请联系站长。';
+    return;
+  }
+  window.open(STRIPE_PAYMENT_LINK, '_blank', 'noopener');
+}
+
 // ---------- 事件绑定 ----------
 generateBtn.addEventListener('click', generate);
 downloadBtn.addEventListener('click', download);
+cleanDownloadBtn.addEventListener('click', () => {
+  if (cleanDownloadBtn.dataset.unlocked === '1') {
+    cleanDownload();
+  } else {
+    openStripeCheckout();
+  }
+});
+applyCleanUnlockedUI();
 
 // ---------- 分享面板（多平台） ----------
 const shareBtn = $('shareBtn');

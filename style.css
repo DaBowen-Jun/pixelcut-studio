@@ -228,6 +228,13 @@ main { position: relative; z-index: 2; }
 .btn--accent { background: rgba(255,207,63,.16); border-color: rgba(255,207,63,.4); color: var(--accent); }
 .btn--ghost { background: transparent; }
 .btn--lg { padding: 15px 26px; font-size: 15px; }
+/* 付费干净版下载：金色描边 + 💎 暗示，按钮在 data-unlocked=1 时变绿色 */
+.btn--premium { background: linear-gradient(135deg, rgba(255,193,7,.18), rgba(255,152,0,.18)); border-color: rgba(255,193,7,.55); color: #b07000; font-weight: 600; }
+.btn--premium[data-unlocked="1"] { background: linear-gradient(135deg, rgba(46,204,113,.18), rgba(39,174,96,.18)); border-color: rgba(46,204,113,.55); color: #137a3b; }
+
+/* 支付成功浮窗（?paid=1 回到本站时短暂显示） */
+.paid-toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-16px); background: linear-gradient(135deg, #2ecc71, #27ae60); color: #fff; padding: 12px 22px; border-radius: 999px; font-weight: 600; font-size: 14px; box-shadow: 0 12px 32px rgba(46,204,113,.4); opacity: 0; transition: opacity .35s ease, transform .35s ease; z-index: 9999; pointer-events: none; }
+.paid-toast--visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* 结果对比 */
 .result { margin-top: 22px; }
