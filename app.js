@@ -119,6 +119,7 @@ const I18N = {
     'status.loaded': '已加载，点击「生成像素形象」开始转换。',
     'status.loading': '⏳ 正在生成…',
     'status.done': '✅ 完成：{dims} 像素块 · {style} · {colors} 色层',
+    'status.donePerler': '✅ 完成：{dims} 豆 · {style} · {colors} 色层',
     'status.fail': '❌ 生成失败：',
     'share.text': '我用 PixelCut Studio 把照片变成了像素风🎨 6种风格免费玩👉 ',
     'share.title': '分享给朋友',
@@ -220,6 +221,7 @@ const I18N = {
     'status.loaded': 'Loaded. Click "Generate" to start.',
     'status.loading': 'Generating…',
     'status.done': '✅ Done: {dims} pixels · {style} · {colors} color steps',
+    'status.donePerler': '✅ Done: {dims} beads · {style} · {colors} color steps',
     'status.fail': '❌ Failed: ',
     'share.text': 'Turned my photo into pixel art with PixelCut Studio 🎨 6 styles, free👉 ',
     'share.title': 'Share with friends',
@@ -283,6 +285,7 @@ const I18N = {
 };
 
 const STYLE_NAMES = {
+  original:{ zh: '📷 原图像素', en: '📷 Original' },
   neon:    { zh: '🌈 霓虹肖像', en: '🌈 Neon' },
   pop:     { zh: '🎨 波普艺术', en: '🎨 Pop' },
   cyber:   { zh: '🤖 赛博朋克', en: '🤖 Cyberpunk' },
@@ -364,20 +367,21 @@ function generate() {
   // 让 UI 先刷新再执行（避免卡顿假死）
   setTimeout(() => {
     try {
-      const density = parseInt(densitySel.value, 10);
-      const scale = parseInt(scaleSlider.value, 10);
-      const colorCount = parseInt(colorsSlider.value, 10);
+      const density = Math.max(1, Math.floor(parseInt(densitySel.value, 10) || 64));
+      const scale = Math.max(1, Math.floor(parseInt(scaleSlider.value, 10) || 8));
+      const colorCount = Math.max(2, Math.floor(parseInt(colorsSlider.value, 10) || 8));
       const withOutline = outlineChk.checked;
       const style = styleSel.value;
-      const saturation = parseInt(satSlider.value, 10) / 100;
-      const contrast = parseInt(conSlider.value, 10) / 100;
+      const saturation = Math.max(0, parseInt(satSlider.value, 10) || 100) / 100;
+      const contrast = Math.max(0, parseInt(conSlider.value, 10) || 100) / 100;
       lastScale = scale;
 
       // 拼豆模式：先中心裁剪为正方形（拼豆板是方的），再生成
       let workImg = sourceImage;
       if (perlerMode) {
-        const s = Math.min(sourceImage.width, sourceImage.height);
-        const cx = (sourceImage.width - s) / 2, cy = (sourceImage.height - s) / 2;
+        const srcW = Math.floor(sourceImage.width || 1), srcH = Math.floor(sourceImage.height || 1);
+        const s = Math.min(srcW, srcH);
+        const cx = Math.floor((srcW - s) / 2), cy = Math.floor((srcH - s) / 2);
         const sq = document.createElement('canvas');
         sq.width = s; sq.height = s;
         sq.getContext('2d').drawImage(sourceImage, cx, cy, s, s, 0, 0, s, s);
@@ -408,9 +412,9 @@ function generate() {
       downloadBtn.dataset.ready = '1';
       cleanDownloadBtn.disabled = false;
       if (merchBtn) merchBtn.disabled = false;
-      const dims = out.width + '×' + out.height;
+      const dims = perlerMode ? (density + '×' + density) : (out.width + '×' + out.height);
       const styleLabel = (STYLE_NAMES[style] && STYLE_NAMES[style][currentLang]) || style;
-      statusEl.textContent = t('status.done')
+      statusEl.textContent = t(perlerMode ? 'status.donePerler' : 'status.done')
         .replace('{dims}', dims)
         .replace('{style}', styleLabel)
         .replace('{colors}', colorCount);
@@ -531,10 +535,17 @@ function refreshAffiliateCards() {
 }
 
 function pixelize(img, density, scale, colorCount, withOutline, style, saturation, contrast, perler, palette) {
+  // 防御性整数化：Canvas API 要求整数宽高，浮点会报 "Value is not of type 'long'"
+  density = Math.max(1, Math.floor(+density || 64));
+  scale = Math.max(1, Math.floor(+scale || 8));
+  colorCount = Math.max(2, Math.floor(+colorCount || 8));
+
   // 1) 计算降采样目标尺寸（保持比例，density 为长边像素数）
-  let tw = img.width, th = img.height;
-  if (tw >= th) { th = Math.round(th * density / tw); tw = density; }
-  else { tw = Math.round(tw * density / th); th = density; }
+  let tw = Math.floor(img.width || 1), th = Math.floor(img.height || 1);
+  if (tw >= th) { th = Math.max(1, Math.round(th * density / tw)); tw = density; }
+  else { tw = Math.max(1, Math.round(tw * density / th)); th = density; }
+  tw = Math.max(1, Math.floor(tw));
+  th = Math.max(1, Math.floor(th));
 
   // 2) 降采样：开启平滑获得每块平均色
   const small = document.createElement('canvas');
@@ -571,8 +582,8 @@ function pixelize(img, density, scale, colorCount, withOutline, style, saturatio
 
   // 5) 无平滑放大到显示分辨率
   const out = document.createElement('canvas');
-  out.width = tw * scale;
-  out.height = th * scale;
+  out.width = Math.max(1, Math.floor(tw * scale));
+  out.height = Math.max(1, Math.floor(th * scale));
   const octx = out.getContext('2d');
   octx.imageSmoothingEnabled = false; // 关键：保持锐利像素块
   const tmp = document.createElement('canvas');
@@ -684,6 +695,12 @@ function clamp255(v) { return Math.max(0, Math.min(255, Math.round(v))); }
 
 function processStyle(style, data, colorCount, saturation, contrast) {
   switch (style) {
+    case 'original': {
+      // 原图像素：从图片本身颜色提取调色板，保留真实色彩（最适合拼豆）
+      const palette = medianCutPalette(data, colorCount);
+      mapToPalette(data, palette);
+      break;
+    }
     case 'neon':
       boostSatCon(data, saturation, contrast);
       mapLuminanceToPalette(data, PALETTES.neon, colorCount);
@@ -1062,6 +1079,7 @@ conSlider.addEventListener('input', () => (conVal.textContent = conSlider.value 
 
 // 风格切换时自动推荐参数
 const STYLE_PRESETS = {
+  original:{ d: '64', c: 8,  sat: 100, con: 100, out: false },
   neon:    { d: '64', c: 8,  sat: 180, con: 130, out: false },
   pop:     { d: '64', c: 5,  sat: 160, con: 140, out: false },
   cyber:   { d: '64', c: 8,  sat: 170, con: 140, out: false },
@@ -1684,6 +1702,13 @@ function buildDensityOptions(list, def) {
     `<option value="${v}"${v === def ? ' selected' : ''}>${l}</option>`).join('');
 }
 
+function syncSliderLabels() {
+  if (scaleVal) scaleVal.textContent = scaleSlider.value + '×';
+  if (colorsVal) colorsVal.textContent = colorsSlider.value;
+  if (satVal) satVal.textContent = satSlider.value + '%';
+  if (conVal) conVal.textContent = conSlider.value + '%';
+}
+
 function applyMode() {
   const active = modeSeg && modeSeg.querySelector('.seg__btn.is-active');
   perlerMode = !!(active && active.dataset.mode === 'perler');
@@ -1691,6 +1716,11 @@ function applyMode() {
     buildDensityOptions(PERLER_DENSITY, '29');
     if (pegOverlay) pegOverlay.hidden = !perlerGridOn;
     const hint = $('perlerHint'); if (hint) hint.hidden = false;
+    // 拼豆默认使用「原图像素」风格，避免霓虹/波普等艺术风格把脸搞花
+    if (styleSel && styleSel.value !== 'original') {
+      styleSel.value = 'original';
+      styleSel.dispatchEvent(new Event('change'));
+    }
     // 已有结果则刷新网格与按钮状态（需确保是拼豆生成的结果）
     if (outCanvas && outCanvas.width && perlerSmallCanvas) {
       pegGridBtn.disabled = false;
