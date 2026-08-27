@@ -725,7 +725,7 @@ function applyOutline(data, w, h) {
 
 // ---------- 水印配置 ----------
 const WATERMARK_ENABLED = true;
-const WATERMARK_SITE = 'pixcutstudio.netlify.app';
+const WATERMARK_SITE = 'pixelcut-studio.pages.dev';
 const WATERMARK_LABEL = 'PixelCut Studio';
 
 // 在画布右下角叠加半透明水印，返回带水印的 data URL
@@ -783,7 +783,7 @@ function download() {
 
 // ---------- 干净版下载（Stripe Payment Links，无后端）----------
 // 用户从 Stripe 后台创建一个 $0.99 的 Payment Link，并在「支付完成后跳转地址」里配置：
-//   https://pixcutstudio.netlify.app/?paid=1
+//   https://pixelcut-studio.pages.dev/?paid=1
 // 把链接粘到下面 STRIPE_PAYMENT_LINK 即可启用。
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_6oU8wl2aC5CH7KVaqUffy00'; // ← Stripe 沙盒 Payment Link
 const CLEAN_UNLOCK_KEY = 'pixelcut_clean_unlocked';
@@ -872,7 +872,7 @@ const sharePanelClose = $('sharePanelClose');
 const shareWechat = $('shareWechat');
 const shareWechatQr = $('shareWechatQr');
 
-const OG_IMAGE = 'https://pixcutstudio.netlify.app/assets/og-cover.svg';
+const OG_IMAGE = 'https://pixelcut-studio.pages.dev/assets/og-cover.svg';
 
 function getShareText() { return t('share.text') + ' ' + location.href; }
 
