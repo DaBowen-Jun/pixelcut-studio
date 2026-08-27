@@ -6,7 +6,7 @@ export async function onRequestPost({ request, env }) {
   // 轻量防护：仅接受来自本站域名的提交
   const origin = request.headers.get('origin') || request.headers.get('referer') || '';
   const allowed =
-    origin.includes('pixcutstudio.pages.dev') ||
+    origin.includes('pixelcut-studio.pages.dev') ||
     origin.includes('pixcutstudio.netlify.app') ||
     origin.includes('localhost') ||
     origin.includes('127.0.0.1');
