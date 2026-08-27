@@ -161,7 +161,23 @@ const I18N = {
     'merch.orderSoon': '定制购买即将上线，先把效果图保存到相册分享给朋友吧～',
     'merch.tip': '创意预览 · 实际产品以成品为准',
     'merch.example.t': '先看看效果',
-    'merch.example.d': '你的头像印在手机壳上，是不是很有感觉？生成一张就能预览同款。'
+    'merch.example.d': '你的头像印在手机壳上，是不是很有感觉？生成一张就能预览同款。',
+    'ctrl.mode': '模式',
+    'mode.normal': '标准',
+    'mode.perler': '🧩 拼豆',
+    'perler.btn': '🧩 拼豆图纸',
+    'perler.list': '🧮 用豆清单',
+    'perler.grid': '▦ 网格',
+    'perler.grid.on': '网格 开',
+    'perler.grid.off': '网格 关',
+    'perler.title': '拼豆图纸',
+    'perler.patternTip': '每格 = 1 颗豆，照着 pegboard 摆即可 · 可下载打印',
+    'perler.save': '⬇ 下载图纸',
+    'perler.listTitle': '用豆清单',
+    'perler.listTip': '照着清单买对应颜色的豆，数量已帮你数好',
+    'perler.download': '⬇ 下载清单 (CSV)',
+    'perler.close': '关闭',
+    'perler.paletteNote': '色值按 Perler / Hama 近似色卡匹配，实际请以你手头豆色为准'
   },
   en: {
     brand: 'PixelCut Studio',
@@ -246,7 +262,23 @@ const I18N = {
     'merch.orderSoon': 'Ordering is coming soon — save the mockup to your album and share it with friends for now!',
     'merch.tip': 'Creative preview · actual product may vary',
     'merch.example.t': 'See the idea first',
-    'merch.example.d': 'Your avatar on a phone case — pretty cool, right? Generate one to preview the same.'
+    'merch.example.d': 'Your avatar on a phone case — pretty cool, right? Generate one to preview the same.',
+    'ctrl.mode': 'Mode',
+    'mode.normal': 'Normal',
+    'mode.perler': '🧩 Beads',
+    'perler.btn': '🧩 Bead pattern',
+    'perler.list': '🧮 Bead list',
+    'perler.grid': '▦ Grid',
+    'perler.grid.on': 'Grid On',
+    'perler.grid.off': 'Grid Off',
+    'perler.title': 'Bead pattern',
+    'perler.patternTip': 'Each cell = 1 bead · place on a pegboard · download to print',
+    'perler.save': '⬇ Download pattern',
+    'perler.listTitle': 'Bead list',
+    'perler.listTip': 'Buy beads by these colors — counts are pre-counted',
+    'perler.download': '⬇ Download list (CSV)',
+    'perler.close': 'Close',
+    'perler.paletteNote': 'Colors matched to approximate Perler / Hama palette; verify against your actual beads'
   }
 };
 
@@ -339,12 +371,38 @@ function generate() {
       const style = styleSel.value;
       const saturation = parseInt(satSlider.value, 10) / 100;
       const contrast = parseInt(conSlider.value, 10) / 100;
+      lastScale = scale;
 
-      const out = pixelize(sourceImage, density, scale, colorCount, withOutline, style, saturation, contrast);
+      // 拼豆模式：先中心裁剪为正方形（拼豆板是方的），再生成
+      let workImg = sourceImage;
+      if (perlerMode) {
+        const s = Math.min(sourceImage.width, sourceImage.height);
+        const cx = (sourceImage.width - s) / 2, cy = (sourceImage.height - s) / 2;
+        const sq = document.createElement('canvas');
+        sq.width = s; sq.height = s;
+        sq.getContext('2d').drawImage(sourceImage, cx, cy, s, s, 0, 0, s, s);
+        workImg = sq;
+      }
+
+      const out = pixelize(workImg, density, scale, colorCount, withOutline, style, saturation, contrast, perlerMode, perlerMode ? PERLER_PALETTE : null);
 
       outCanvas.width = out.width;
       outCanvas.height = out.height;
       outCanvas.getContext('2d').putImageData(out, 0, 0);
+
+      // 拼豆模式：启用图纸/清单/网格按钮并叠加 pegboard 网格
+      if (perlerMode) {
+        perlerBtn.disabled = false;
+        beadListBtn.disabled = false;
+        pegGridBtn.disabled = false;
+        pegGridBtn.textContent = t('perler.grid.on');
+        pegGridBtn.classList.add('is-active');
+        drawPegGrid();
+      } else {
+        perlerBtn.disabled = true;
+        beadListBtn.disabled = true;
+        pegGridBtn.disabled = true;
+      }
 
       downloadBtn.disabled = false;
       downloadBtn.dataset.ready = '1';
@@ -377,7 +435,7 @@ function renderAffiliateCard(style) {
   const isZh = currentLang === 'zh';
   let url, badge, title, text, cta, icon, affKey;
   if (isZh) {
-    const kw = TAOBAO_STYLE_KEYWORDS[style] || '像素风插画定制';
+    const kw = perlerMode ? '拼豆 融豆 材料包 29板 透明板 基础板' : (TAOBAO_STYLE_KEYWORDS[style] || '像素风插画定制');
     url = buildTaobaoUrl(kw);
     badge = '推荐 · 淘宝';
     title = '想进阶创作？';
@@ -472,7 +530,7 @@ function refreshAffiliateCards() {
   }
 }
 
-function pixelize(img, density, scale, colorCount, withOutline, style, saturation, contrast) {
+function pixelize(img, density, scale, colorCount, withOutline, style, saturation, contrast, perler, palette) {
   // 1) 计算降采样目标尺寸（保持比例，density 为长边像素数）
   let tw = img.width, th = img.height;
   if (tw >= th) { th = Math.round(th * density / tw); tw = density; }
@@ -494,6 +552,23 @@ function pixelize(img, density, scale, colorCount, withOutline, style, saturatio
   // 4) 边缘描线（在量化后的小图上执行，放大后即为粗轮廓）
   if (withOutline) applyOutline(data, tw, th);
 
+  // 4.5) 拼豆模式：把每个像素吸附到真实豆色卡，并统计「用豆清单」
+  if (perler && palette) {
+    const rgbPal = palette.map(p => p.rgb);
+    const counts = new Map();
+    for (let i = 0; i < data.length; i += 4) {
+      const [r, g, b] = nearestColor([data[i], data[i + 1], data[i + 2]], rgbPal);
+      data[i] = r; data[i + 1] = g; data[i + 2] = b;
+      const key = (r << 16) | (g << 8) | b;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    perlerBeadList = [...counts.entries()].map(([key, c]) => {
+      const r = (key >> 16) & 255, g = (key >> 8) & 255, b = key & 255;
+      const p = palette.find(p => p.rgb[0] === r && p.rgb[1] === g && p.rgb[2] === b) || { name: '自定义', hex: rgbToHex(r, g, b) };
+      return { hex: p.hex, name: p.name, count: c };
+    }).sort((a, b) => b.count - a.count);
+  }
+
   // 5) 无平滑放大到显示分辨率
   const out = document.createElement('canvas');
   out.width = tw * scale;
@@ -503,6 +578,7 @@ function pixelize(img, density, scale, colorCount, withOutline, style, saturatio
   const tmp = document.createElement('canvas');
   tmp.width = tw; tmp.height = th;
   tmp.getContext('2d').putImageData(imgData, 0, 0);
+  if (perler) perlerSmallCanvas = tmp; // 保存 1 像素=1 豆 的小图，供拼豆图纸/清单使用
   octx.drawImage(tmp, 0, 0, tw * scale, th * scale);
 
   // 赛博朋克：叠加 CRT 扫描线，强化科技感
@@ -1537,3 +1613,244 @@ if (merchOrder) merchOrder.addEventListener('click', () => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && merchModal && !merchModal.hidden) closeMerch();
 });
+
+// ================= 拼豆模式 (Perler / Hama fuse beads) =================
+// 真实豆色卡（近似 Perler / Hama 常用色），用于吸附与清单。
+const PERLER_PALETTE = [
+  { name: '白 White',          hex: '#FFFFFF', rgb: [255, 255, 255] },
+  { name: '浅灰 Light Gray',   hex: '#D3D3D3', rgb: [211, 211, 211] },
+  { name: '银 Silver',         hex: '#C0C0C0', rgb: [192, 192, 192] },
+  { name: '灰 Gray',           hex: '#808080', rgb: [128, 128, 128] },
+  { name: '深灰 Dark Gray',    hex: '#404040', rgb: [ 64,  64,  64] },
+  { name: '黑 Black',          hex: '#1A1A1A', rgb: [ 26,  26,  26] },
+  { name: '红 Red',            hex: '#E4002B', rgb: [228,   0,  43] },
+  { name: '酒红 Crimson',      hex: '#B80F3C', rgb: [184,  15,  60] },
+  { name: '深红 Maroon',       hex: '#8B1A2B', rgb: [139,  26,  43] },
+  { name: '粉 Pink',           hex: '#FF6EC7', rgb: [255, 110, 199] },
+  { name: '浅粉 Light Pink',   hex: '#FFB6C1', rgb: [255, 182, 193] },
+  { name: '橙 Orange',         hex: '#FF7900', rgb: [255, 121,   0] },
+  { name: '桃 Peach',          hex: '#FFCBA4', rgb: [255, 203, 164] },
+  { name: '黄 Yellow',         hex: '#FEE101', rgb: [254, 225,   1] },
+  { name: '金 Gold',           hex: '#FFD700', rgb: [255, 215,   0] },
+  { name: '浅黄 Cream',        hex: '#FFF3B0', rgb: [255, 243, 176] },
+  { name: '绿 Green',          hex: '#00A650', rgb: [  0, 166,  80] },
+  { name: '深绿 Forest',       hex: '#006B3F', rgb: [  0, 107,  63] },
+  { name: '薄荷 Mint',         hex: '#9FE2BF', rgb: [159, 226, 191] },
+  { name: '青柠 Lime',         hex: '#BFFF00', rgb: [191, 255,   0] },
+  { name: '青 Turquoise',      hex: '#40E0D0', rgb: [ 64, 224, 208] },
+  { name: '天青 Teal',         hex: '#008080', rgb: [  0, 128, 128] },
+  { name: '蓝 Blue',           hex: '#0085CA', rgb: [  0, 133, 202] },
+  { name: '浅蓝 Sky',          hex: '#87CEEB', rgb: [135, 206, 235] },
+  { name: '藏青 Navy',         hex: '#1D2B5A', rgb: [ 29,  43,  90] },
+  { name: '紫 Purple',         hex: '#7B2FBE', rgb: [123,  47, 190] },
+  { name: '薰衣草 Lavender',   hex: '#B57EDC', rgb: [181, 126, 220] },
+  { name: '品红 Magenta',      hex: '#FF00C8', rgb: [255,   0, 200] },
+  { name: '棕 Brown',          hex: '#7B4B2A', rgb: [123,  75,  42] },
+  { name: '浅棕 Tan',          hex: '#D2B48C', rgb: [210, 180, 140] },
+  { name: '深棕 Dark Brown',   hex: '#5C3A21', rgb: [ 92,  58,  33] },
+  { name: '肤色·浅 Light Skin',  hex: '#FFE0BD', rgb: [255, 224, 189] },
+  { name: '肤色·中 Medium Skin', hex: '#E8B98C', rgb: [232, 185, 140] },
+  { name: '肤色·深 Dark Skin',   hex: '#8D5524', rgb: [141,  85,  36] },
+  { name: '肤色·深褐 Deep Skin', hex: '#5C3317', rgb: [ 92,  51,  23] },
+];
+
+const NORMAL_DENSITY = [['64', '64 × 64'], ['96', '96 × 96']];
+const PERLER_DENSITY = [
+  ['16', '16 × 16 · 钥匙扣'],
+  ['24', '24 × 24 · 快速'],
+  ['29', '29 × 29 · 一整板'],
+  ['32', '32 × 32'],
+  ['48', '48 × 48 · 四板'],
+];
+
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
+let perlerMode = false;
+let perlerGridOn = true;
+let lastScale = 8;
+let perlerSmallCanvas = null;   // tw×th 小图（已吸附豆色）
+let perlerBeadList = [];        // [{ hex, name, count }]
+
+const modeSeg = $('modeSeg');
+const pegOverlay = $('pegOverlay');
+const perlerBtn = $('perlerBtn');
+const beadListBtn = $('beadListBtn');
+const pegGridBtn = $('pegGridBtn');
+
+function buildDensityOptions(list, def) {
+  densitySel.innerHTML = list.map(([v, l]) =>
+    `<option value="${v}"${v === def ? ' selected' : ''}>${l}</option>`).join('');
+}
+
+function applyMode() {
+  const active = modeSeg && modeSeg.querySelector('.seg__btn.is-active');
+  perlerMode = !!(active && active.dataset.mode === 'perler');
+  if (perlerMode) {
+    buildDensityOptions(PERLER_DENSITY, '29');
+    if (pegOverlay) pegOverlay.hidden = !perlerGridOn;
+    const hint = $('perlerHint'); if (hint) hint.hidden = false;
+    // 已有结果则刷新网格与按钮状态
+    if (outCanvas && outCanvas.width) {
+      pegGridBtn.disabled = false;
+      pegGridBtn.textContent = t('perler.grid.on');
+      pegGridBtn.classList.add('is-active');
+      perlerBtn.disabled = false;
+      beadListBtn.disabled = false;
+      drawPegGrid();
+    }
+  } else {
+    buildDensityOptions(NORMAL_DENSITY, '64');
+    if (pegOverlay) pegOverlay.hidden = true;
+    const hint = $('perlerHint'); if (hint) hint.hidden = true;
+    pegGridBtn.disabled = true;
+    pegGridBtn.classList.remove('is-active');
+  }
+}
+
+if (modeSeg) modeSeg.querySelectorAll('.seg__btn').forEach(b => b.addEventListener('click', () => {
+  modeSeg.querySelectorAll('.seg__btn').forEach(x => x.classList.remove('is-active'));
+  b.classList.add('is-active');
+  applyMode();
+}));
+
+// 把 pegboard 网格叠加到结果预览上（每格 = 1 颗豆）
+function drawPegGrid() {
+  if (!pegOverlay) return;
+  if (!perlerMode || !perlerGridOn || !outCanvas.width) { pegOverlay.hidden = true; return; }
+  const w = outCanvas.width, h = outCanvas.height, s = lastScale;
+  pegOverlay.width = w; pegOverlay.height = h;
+  pegOverlay.hidden = false;
+  const c = pegOverlay.getContext('2d');
+  c.clearRect(0, 0, w, h);
+  c.strokeStyle = 'rgba(255,255,255,0.22)';
+  c.lineWidth = 1;
+  for (let x = 0; x <= w; x += s) { c.beginPath(); c.moveTo(x + 0.5, 0); c.lineTo(x + 0.5, h); c.stroke(); }
+  for (let y = 0; y <= h; y += s) { c.beginPath(); c.moveTo(0, y + 0.5); c.lineTo(w, y + 0.5); c.stroke(); }
+  // 模拟 peg 孔位
+  c.strokeStyle = 'rgba(0,0,0,0.18)';
+  for (let y = s / 2; y < h; y += s) {
+    for (let x = s / 2; x < w; x += s) {
+      c.beginPath(); c.arc(x, y, Math.max(1, s * 0.16), 0, Math.PI * 2); c.stroke();
+    }
+  }
+}
+
+if (pegGridBtn) pegGridBtn.addEventListener('click', () => {
+  perlerGridOn = !perlerGridOn;
+  pegGridBtn.classList.toggle('is-active', perlerGridOn);
+  pegGridBtn.textContent = perlerGridOn ? t('perler.grid.on') : t('perler.grid.off');
+  drawPegGrid();
+});
+
+// ---------- 拼豆图纸弹窗 ----------
+const perlerModal = $('perlerModal');
+const perlerBackdrop = $('perlerBackdrop');
+const perlerCanvas = $('perlerCanvas');
+const perlerSave = $('perlerSave');
+
+function drawPerlerPattern() {
+  if (!perlerSmallCanvas || !perlerCanvas) return;
+  const tw = perlerSmallCanvas.width, th = perlerSmallCanvas.height;
+  const cell = 22;
+  perlerCanvas.width = tw * cell;
+  perlerCanvas.height = th * cell;
+  const c = perlerCanvas.getContext('2d');
+  c.fillStyle = '#0b0d1a'; c.fillRect(0, 0, perlerCanvas.width, perlerCanvas.height);
+  const img = perlerSmallCanvas.getContext('2d').getImageData(0, 0, tw, th).data;
+  for (let y = 0; y < th; y++) {
+    for (let x = 0; x < tw; x++) {
+      const i = (y * tw + x) * 4;
+      c.fillStyle = `rgb(${img[i]},${img[i + 1]},${img[i + 2]})`;
+      c.fillRect(x * cell, y * cell, cell, cell);
+    }
+  }
+  // 网格线
+  c.strokeStyle = 'rgba(255,255,255,0.16)'; c.lineWidth = 1;
+  for (let x = 0; x <= tw; x++) { c.beginPath(); c.moveTo(x * cell + 0.5, 0); c.lineTo(x * cell + 0.5, th * cell); c.stroke(); }
+  for (let y = 0; y <= th; y++) { c.beginPath(); c.moveTo(0, y * cell + 0.5); c.lineTo(tw * cell, y * cell + 0.5); c.stroke(); }
+}
+
+function openPerlerPattern() {
+  if (!perlerSmallCanvas) { if (statusEl) statusEl.textContent = '⚠️ ' + t('merch.cta'); return; }
+  if (perlerModal) { perlerModal.hidden = false; localizeElement(perlerModal); }
+  if (perlerBackdrop) perlerBackdrop.hidden = false;
+  drawPerlerPattern();
+}
+function closePerler() {
+  if (perlerModal) perlerModal.hidden = true;
+  if (perlerBackdrop) perlerBackdrop.hidden = true;
+}
+if (perlerBtn) perlerBtn.addEventListener('click', openPerlerPattern);
+if (perlerSave) perlerSave.addEventListener('click', () => {
+  if (!perlerCanvas) return;
+  const a = document.createElement('a');
+  a.download = 'pixelcut-bead-pattern.png';
+  a.href = perlerCanvas.toDataURL('image/png');
+  a.click();
+});
+
+// ---------- 用豆清单弹窗 ----------
+const beadModal = $('beadModal');
+const beadBackdrop = $('beadBackdrop');
+const beadListEl = $('beadList');
+const beadSummary = $('beadSummary');
+const beadDownload = $('beadDownload');
+
+function renderBeadList() {
+  if (!perlerBeadList.length) { if (beadListEl) beadListEl.innerHTML = '<p>暂无数据</p>'; return; }
+  const n = perlerSmallCanvas ? perlerSmallCanvas.width : 0;
+  const total = perlerBeadList.reduce((s, b) => s + b.count, 0);
+  const side = Math.max(1, Math.ceil(n / 29));
+  const boards = side * side;
+  if (beadSummary) {
+    beadSummary.innerHTML = currentLang === 'zh'
+      ? `共 <b>${total}</b> 颗豆 · 图幅 ${n}×${n} · 约需 <b>${boards}</b> 块 29×29 板（${side}×${side} 拼）`
+      : `Total <b>${total}</b> beads · ${n}×${n} · needs ~<b>${boards}</b> 29×29 boards (${side}×${side})`;
+  }
+  if (beadListEl) beadListEl.innerHTML = perlerBeadList.map(b => `
+    <div class="bead-row">
+      <span class="bead-sw" style="background:${b.hex}"></span>
+      <span class="bead-name">${escapeHtml(b.name)}</span>
+      <span class="bead-hex">${b.hex}</span>
+      <span class="bead-count">×${b.count}</span>
+    </div>`).join('');
+}
+
+function openBeadList() {
+  if (!perlerBeadList.length) { if (statusEl) statusEl.textContent = '⚠️ ' + t('merch.cta'); return; }
+  if (beadModal) { beadModal.hidden = false; localizeElement(beadModal); }
+  if (beadBackdrop) beadBackdrop.hidden = false;
+  renderBeadList();
+}
+function closeBead() {
+  if (beadModal) beadModal.hidden = true;
+  if (beadBackdrop) beadBackdrop.hidden = true;
+}
+if (beadListBtn) beadListBtn.addEventListener('click', openBeadList);
+if (beadDownload) beadDownload.addEventListener('click', () => {
+  const n = perlerSmallCanvas ? perlerSmallCanvas.width : 0;
+  const side = Math.max(1, Math.ceil(n / 29));
+  let csv = '颜色名称,色值,数量\n';
+  perlerBeadList.forEach(b => { csv += `${b.name},${b.hex},${b.count}\n`; });
+  csv += `\n图幅,${n}x${n}\n所需板数,${side * side} (${side}x${side})\n`;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.download = 'pixelcut-bead-list.csv';
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+if (perlerBackdrop) perlerBackdrop.addEventListener('click', closePerler);
+if (beadBackdrop) beadBackdrop.addEventListener('click', closeBead);
+const perlerClose = $('perlerClose'); if (perlerClose) perlerClose.addEventListener('click', closePerler);
+const beadClose = $('beadClose'); if (beadClose) beadClose.addEventListener('click', closeBead);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (perlerModal && !perlerModal.hidden) closePerler();
+    if (beadModal && !beadModal.hidden) closeBead();
+  }
+});
+
