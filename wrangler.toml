@@ -1,0 +1,7 @@
+name = "pixelcut-studio"
+compatibility-date = "2024-09-23"
+pages-build-output-dir = "."
+
+[[kv_namespaces]]
+binding = "BUCKET"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"

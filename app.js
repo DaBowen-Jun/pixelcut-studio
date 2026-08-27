@@ -1277,7 +1277,7 @@ async function shareToGallery() {
   try {
     const thumb = makeThumb(out, 360);
     const style = styleSel ? styleSel.value : 'unknown';
-    const res = await fetch('/.netlify/functions/gallery-submit', {
+    const res = await fetch('/api/gallery-submit', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ image: thumb, style: style, caption: '' }),
@@ -1301,7 +1301,7 @@ async function loadCommunity() {
   communityGrid.innerHTML = '<p class="community__loading">' + t('community.loading') + '</p>';
   if (communityEmpty) communityEmpty.hidden = true;
   try {
-    const res = await fetch('/.netlify/functions/gallery-list');
+    const res = await fetch('/api/gallery-list');
     const data = await res.json().catch(() => ({ items: [] }));
     const items = Array.isArray(data.items) ? data.items : [];
     if (!items.length) {
@@ -1316,7 +1316,7 @@ async function loadCommunity() {
       btn.type = 'button';
       const img = document.createElement('img');
       img.loading = 'lazy';
-      img.src = '/.netlify/functions/gallery-image?id=' + encodeURIComponent(it.id);
+      img.src = '/api/gallery-image?id=' + encodeURIComponent(it.id);
       img.alt = (it.style || 'pixel') + ' pixel art';
       btn.appendChild(img);
       const cap = document.createElement('span');
@@ -1334,7 +1334,7 @@ async function loadCommunity() {
 
 function openCommunityLightbox(id) {
   if (!communityLightbox || !communityLightboxImg) return;
-  communityLightboxImg.src = '/.netlify/functions/gallery-image?id=' + encodeURIComponent(id);
+  communityLightboxImg.src = '/api/gallery-image?id=' + encodeURIComponent(id);
   communityLightbox.hidden = false;
 }
 function closeCommunityLightbox() {

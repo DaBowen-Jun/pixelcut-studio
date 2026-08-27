@@ -6,8 +6,6 @@
     "dev": "node server.js",
     "start": "node server.js"
   },
-  "dependencies": {
-    "@netlify/blobs": "^1.4.0"
-  },
+  "dependencies": {},
   "license": "MIT"
 }

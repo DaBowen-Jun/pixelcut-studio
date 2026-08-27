@@ -1,12 +1,12 @@
-import { getStore } from '@netlify/blobs';
+// Cloudflare Pages Function — 社区画廊列表
+// 路径：/api/gallery-list
+// KV binding：BUCKET
 
-// 返回社区画廊索引（最近 300 张的元数据）
-export default async () => {
-  const store = getStore('pixelcut-gallery');
+export async function onRequestGet({ env }) {
   let index = [];
   try {
-    const raw = await store.get('index', { type: 'json' });
-    if (Array.isArray(raw)) index = raw;
+    const raw = await env.BUCKET.get('index');
+    if (raw) index = JSON.parse(raw);
   } catch { /* 空画廊 */ }
 
   return new Response(JSON.stringify({ items: index }), {
@@ -17,4 +17,4 @@ export default async () => {
       'access-control-allow-origin': '*',
     },
   });
-};
+}
