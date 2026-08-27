@@ -1080,6 +1080,21 @@ main { position: relative; z-index: 2; }
 /* ---------- 拼豆提示 ---------- */
 .perler-hint { margin: 14px 0 0; padding: 10px 14px; font-size: 13px; line-height: 1.6; color: var(--ink-soft); background: rgba(123,47,190,.12); border: 1px solid rgba(123,47,190,.35); border-radius: 12px; }
 .perler-hint b { color: var(--ink); }
+.perler-hint__tip { display: block; margin-top: 6px; opacity: .92; }
+
+/* ---------- 拼豆展示区块 ---------- */
+.perler-show { padding: 72px 0; }
+.perler-show__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 920px; margin: 0 auto; }
+.perler-show__card { margin: 0; text-align: center; }
+.perler-show__frame { background: #060815; border-radius: var(--radius-sm); padding: 10px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 12px 30px rgba(0,0,0,.4); aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.perler-show__frame img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; image-rendering: pixelated; }
+.perler-show__card figcaption { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
+.perler-show__tag { font-weight: 700; font-size: 15px; color: var(--ink); }
+.perler-show__note { font-size: 12.5px; color: var(--ink-soft); }
+.perler-show__cta { text-align: center; margin-top: 28px; }
+@media (max-width: 640px) {
+  .perler-show__grid { grid-template-columns: 1fr; max-width: 320px; }
+}
 
 /* ---------- 用豆清单 ---------- */
 .bead-summary { text-align: center; font-size: 14px; color: var(--ink); margin: 4px 0 6px; }

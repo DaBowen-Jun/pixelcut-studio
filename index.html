@@ -270,7 +270,7 @@
             <button id="shareGalleryBtn" class="btn btn--accent" data-i18n="community.share">🖼 分享到社区</button>
             <button id="resetBtn" class="btn btn--ghost" data-i18n="btn.reset">↺ 重新上传</button>
           </div>
-          <p class="perler-hint" id="perlerHint" hidden>🧩 <b>拼豆模式</b>：自动正方形裁剪 + 吸附真实豆色卡，可导出「拼豆图纸」与「用豆清单」照着摆。</p>
+          <p class="perler-hint" id="perlerHint" hidden>🧩 <b>拼豆模式</b>：自动正方形裁剪 + 吸附真实豆色卡，可导出「拼豆图纸」与「用豆清单」照着摆。<br><span class="perler-hint__tip">💡 适合：正面大头照、宠物、卡通 / 动漫角色、Logo；主体越大、背景越干净效果越好。背景复杂建议用 48 豆。</span></p>
         </section>
 
         <!-- 结果区 -->
@@ -421,6 +421,40 @@
       </div>
       <div class="merch__cta">
         <a class="btn btn--primary" href="#studio" data-i18n="merch.cta">🎨 先生成头像</a>
+      </div>
+    </section>
+
+    <!-- 拼豆展示：什么照片都能拼 -->
+    <section id="perler-show" class="perler-show">
+      <div class="section-head">
+        <h2 class="section-title" data-i18n="perler.show.title">拼豆适合什么照片？</h2>
+        <p class="section-desc" data-i18n="perler.show.subtitle">不只大头贴——宠物、动漫、Logo 都能拼。主体越大、颜色越干净，效果越好。</p>
+      </div>
+      <div class="perler-show__grid">
+        <figure class="perler-show__card">
+          <div class="perler-show__frame"><img src="assets/examples/example-neon.jpg" alt="头像拼豆示例" loading="lazy" /></div>
+          <figcaption>
+            <span class="perler-show__tag" data-i18n="perler.show.avatar">👤 头像 / 大头贴</span>
+            <span class="perler-show__note" data-i18n="perler.show.avatar.d">正面、纯色背景最佳</span>
+          </figcaption>
+        </figure>
+        <figure class="perler-show__card">
+          <div class="perler-show__frame"><img src="assets/examples/example-pet.png" alt="宠物拼豆示例" loading="lazy" /></div>
+          <figcaption>
+            <span class="perler-show__tag" data-i18n="perler.show.pet">🐱 宠物</span>
+            <span class="perler-show__note" data-i18n="perler.show.pet.d">猫狗辨识度高，超受欢迎</span>
+          </figcaption>
+        </figure>
+        <figure class="perler-show__card">
+          <div class="perler-show__frame"><img src="assets/examples/example-anime.png" alt="动漫拼豆示例" loading="lazy" /></div>
+          <figcaption>
+            <span class="perler-show__tag" data-i18n="perler.show.anime">🎮 动漫 / 角色</span>
+            <span class="perler-show__note" data-i18n="perler.show.anime.d">线条清晰，天生适合拼豆</span>
+          </figcaption>
+        </figure>
+      </div>
+      <div class="perler-show__cta">
+        <a class="btn btn--primary" href="#studio" data-i18n="perler.show.cta">🧩 试试拼豆模式</a>
       </div>
     </section>
 

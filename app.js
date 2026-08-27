@@ -176,7 +176,16 @@ const I18N = {
     'perler.listTip': '照着清单买对应颜色的豆，数量已帮你数好',
     'perler.download': '⬇ 下载清单 (CSV)',
     'perler.close': '关闭',
-    'perler.paletteNote': '色值按 Perler / Hama 近似色卡匹配，实际请以你手头豆色为准'
+    'perler.paletteNote': '色值按 Perler / Hama 近似色卡匹配，实际请以你手头豆色为准',
+    'perler.show.title': '拼豆适合什么照片？',
+    'perler.show.subtitle': '不只大头贴——宠物、动漫、Logo 都能拼。主体越大、颜色越干净，效果越好。',
+    'perler.show.avatar': '👤 头像 / 大头贴',
+    'perler.show.avatar.d': '正面、纯色背景最佳',
+    'perler.show.pet': '🐱 宠物',
+    'perler.show.pet.d': '猫狗辨识度高，超受欢迎',
+    'perler.show.anime': '🎮 动漫 / 角色',
+    'perler.show.anime.d': '线条清晰，天生适合拼豆',
+    'perler.show.cta': '🧩 试试拼豆模式'
   },
   en: {
     brand: 'PixelCut Studio',
@@ -278,7 +287,16 @@ const I18N = {
     'perler.listTip': 'Buy beads by these colors — counts are pre-counted',
     'perler.download': '⬇ Download list (CSV)',
     'perler.close': 'Close',
-    'perler.paletteNote': 'Colors matched to approximate Perler / Hama palette; verify against your actual beads'
+    'perler.paletteNote': 'Colors matched to approximate Perler / Hama palette; verify against your actual beads',
+    'perler.show.title': 'What photos work for beads?',
+    'perler.show.subtitle': 'Not just selfies — pets, anime, logos all work. Bigger subject and cleaner colors = better result.',
+    'perler.show.avatar': '👤 Avatar / portrait',
+    'perler.show.avatar.d': 'Front-facing, plain background is best',
+    'perler.show.pet': '🐱 Pets',
+    'perler.show.pet.d': 'Cats & dogs read well, very popular',
+    'perler.show.anime': '🎮 Anime / character',
+    'perler.show.anime.d': 'Clean lines, born for beads',
+    'perler.show.cta': '🧩 Try bead mode'
   }
 };
 
