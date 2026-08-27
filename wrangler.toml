@@ -1,7 +1,0 @@
-name = "pixelcut-studio"
-compatibility-date = "2024-09-23"
-pages-build-output-dir = "."
-
-[[kv_namespaces]]
-binding = "BUCKET"
-id = "775e5785d18b4a24926533ec4b8d7871"

@@ -4,7 +4,8 @@
   "description": "纯前端像素卡通头像生成器 —— 上传照片，浏览器本地生成 8-bit 像素卡通形象，零依赖、零部署。",
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "echo 'static site, no build step needed'"
   },
   "dependencies": {},
   "license": "MIT"
