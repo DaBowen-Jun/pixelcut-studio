@@ -112,7 +112,7 @@ const I18N = {
     'footer.note': '纯前端像素艺术工具 · 所有图像均在本地处理，不上传服务器。',
     'upload.text.html': '拖拽图片到此处，或 <span class="link">点击选择</span>',
     'download': '⬇ 下载',
-    'btn.clean': '💎 下载无水印 $0.99',
+    'btn.clean': '💎 下载无水印（免费）',
     'btn.clean.unlocked': '✨ 下载无水印（已解锁）',
     'paid.welcome': '✨ 感谢支持！干净版下载已在本浏览器解锁。',
     'status.loaded': '已加载，点击「生成像素形象」开始转换。',
@@ -187,7 +187,7 @@ const I18N = {
     'footer.note': 'A pure front-end pixel art tool · images are processed locally, never uploaded.',
     'upload.text.html': 'Drag an image here, or <span class="link">click to choose</span>',
     'download': '⬇ Download',
-    'btn.clean': '💎 Download clean (no watermark) $0.99',
+    'btn.clean': '💎 Download clean (no watermark) · Free',
     'btn.clean.unlocked': '✨ Download clean (unlocked)',
     'paid.welcome': '✨ Thanks for supporting! Clean download unlocked in this browser.',
     'status.loaded': 'Loaded. Click "Generate" to start.',
@@ -785,7 +785,7 @@ function download() {
 // 用户从 Stripe 后台创建一个 $0.99 的 Payment Link，并在「支付完成后跳转地址」里配置：
 //   https://pixelcut-studio.pages.dev/?paid=1
 // 把链接粘到下面 STRIPE_PAYMENT_LINK 即可启用。
-const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_6oU8wl2aC5CH7KVaqUffy00'; // ← Stripe 沙盒 Payment Link
+const STRIPE_PAYMENT_LINK = ''; // 已关闭：Stripe 账号国家/地区合规问题，付费下载暂下线，干净版改为免费
 const CLEAN_UNLOCK_KEY = 'pixelcut_clean_unlocked';
 
 // 直接导出干净版（不加水印）
@@ -855,13 +855,7 @@ function openStripeCheckout() {
 // ---------- 事件绑定 ----------
 generateBtn.addEventListener('click', generate);
 downloadBtn.addEventListener('click', download);
-cleanDownloadBtn.addEventListener('click', () => {
-  if (cleanDownloadBtn.dataset.unlocked === '1') {
-    cleanDownload();
-  } else {
-    openStripeCheckout();
-  }
-});
+cleanDownloadBtn.addEventListener('click', () => { cleanDownload(); });
 applyCleanUnlockedUI();
 
 // ---------- 分享面板（多平台） ----------
