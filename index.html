@@ -663,5 +663,19 @@
   </div>
 
   <script src="app.js"></script>
+
+  <!-- 访问统计埋点（自有 KV，fire-and-forget） -->
+  <script>
+    (function () {
+      try {
+        fetch('/api/visit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ path: location.pathname }),
+          keepalive: true
+        });
+      } catch (e) { /* 忽略 */ }
+    })();
+  </script>
 </body>
 </html>

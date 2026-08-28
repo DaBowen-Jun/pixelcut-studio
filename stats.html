@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PixelCut 访问统计</title>
+<style>
+  :root{ --bg:#0e1018; --card:#181b29; --line:#262a3d; --txt:#e8eaf2; --sub:#8b90a8; --red:#ff5000; --blue:#3a9bd1; --green:#3fae5a; --gold:#ffb400; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--txt);padding:28px 16px 60px;}
+  .wrap{max-width:920px;margin:0 auto;}
+  h1{font-size:20px;font-weight:800;margin-bottom:4px;}
+  .sub{color:var(--sub);font-size:13px;margin-bottom:22px;}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;}
+  .card .k{font-size:12px;color:var(--sub);margin-bottom:8px;}
+  .card .v{font-size:30px;font-weight:800;line-height:1;}
+  .card .v small{font-size:14px;color:var(--sub);font-weight:600;}
+  .c1 .v{color:var(--red);} .c2 .v{color:var(--blue);} .c3 .v{color:var(--green);} .c4 .v{color:var(--gold);}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px;}
+  .panel h2{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+  .panel h2::before{content:"";width:4px;height:14px;background:var(--red);border-radius:2px;}
+  .bars{display:flex;align-items:flex-end;gap:5px;height:150px;}
+  .bars .b{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .bars .b .bar{width:100%;background:linear-gradient(180deg,var(--red),#ff8a4d);border-radius:4px 4px 0 0;min-height:2px;transition:height .3s;}
+  .bars .b .lab{font-size:9px;color:var(--sub);margin-top:5px;transform:rotate(45deg);white-space:nowrap;}
+  .legend{font-size:11px;color:var(--sub);margin-top:10px;}
+  .list .row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px;}
+  .list .row:last-child{border-bottom:none;}
+  .list .name{flex:1;color:var(--txt);}
+  .list .num{font-weight:700;color:var(--red);}
+  .meter{flex:2;height:8px;background:#0e1018;border-radius:5px;overflow:hidden;}
+  .meter i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),#6ad0ff);border-radius:5px;}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .err{color:#ff6b6b;font-size:13px;padding:20px;text-align:center;}
+  @media(max-width:640px){ .grid4{grid-template-columns:repeat(2,1fr);} .two{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📊 PixelCut 访问统计</h1>
+  <div class="sub">自有数据 · 存于 Cloudflare KV · 口令保护 · 时区：北京时间</div>
+  <div id="app"><div class="err">正在加载…</div></div>
+</div>
+
+<script>
+const KEY_STORE = 'pc_stats_key';
+function askKey(){
+  let k = sessionStorage.getItem(KEY_STORE);
+  if(!k){ k = prompt('请输入统计口令（默认 pixelcut2026）：') || ''; if(k) sessionStorage.setItem(KEY_STORE,k); }
+  return k;
+}
+async function load(){
+  let key = askKey();
+  if(!key){ document.getElementById('app').innerHTML='<div class="err">未输入口令</div>'; return; }
+  try{
+    const r = await fetch('/api/stats',{headers:{'x-stats-key':key}});
+    if(r.status===401){ sessionStorage.removeItem(KEY_STORE); document.getElementById('app').innerHTML='<div class="err">口令错误，刷新重试</div>'; return; }
+    const d = await r.json();
+    render(d);
+  }catch(e){ document.getElementById('app').innerHTML='<div class="err">加载失败：'+e.message+'</div>'; }
+}
+function topObj(o,n){ return Object.entries(o||{}).sort((a,b)=>b[1]-a[1]).slice(0,n); }
+function render(d){
+  const last14 = d.days.slice(-14);
+  const maxPv = Math.max(1,...last14.map(x=>x.pv));
+  const bars = last14.map(x=>{
+    const h = Math.round((x.pv/maxPv)*100);
+    const mm = x.date.slice(5);
+    return `<div class="b"><div class="bar" style="height:${h}%"></div><div class="lab">${mm}</div></div>`;
+  }).join('');
+  const tp = topObj(d.paths,8); const co = topObj(d.countries,8); const dv = d.devices||{};
+  const maxPath = Math.max(1,...tp.map(x=>x[1]));
+  const maxCo = Math.max(1,...co.map(x=>x[1]));
+  const pathRows = tp.length? tp.map(([p,c])=>`<div class="row"><span class="name">${p}</span><span class="meter"><i style="width:${Math.round(c/maxPath*100)}%"></i></span><span class="num">${c}</span></div>`).join('') : '<div class="err">暂无数据</div>';
+  const coRows = co.length? co.map(([c,n])=>`<div class="row"><span class="name">${c==='XX'?'未知':c}</span><span class="meter"><i style="width:${Math.round(n/maxCo*100)}%"></i></span><span class="num">${n}</span></div>`).join('') : '<div class="err">暂无数据</div>';
+  const devTotal = (dv.mobile||0)+(dv.desktop||0)+(dv.tablet||0)||1;
+  const devRows = ['mobile','tablet','desktop'].map(k=>{
+    const n=dv[k]||0; const label={mobile:'手机',tablet:'平板',desktop:'电脑'}[k];
+    return `<div class="row"><span class="name">${label}</span><span class="meter"><i style="width:${Math.round(n/devTotal*100)}%"></i></span><span class="num">${n}</span></div>`;
+  }).join('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="grid4">
+      <div class="card c1"><div class="k">今日 PV</div><div class="v">${d.today.pv}</div></div>
+      <div class="card c2"><div class="k">今日 UV</div><div class="v">${d.today.uv}</div></div>
+      <div class="card c3"><div class="k">近30天 PV</div><div class="v">${d.windowPv}</div></div>
+      <div class="card c4"><div class="k">近30天 UV</div><div class="v">${d.windowUv}</div></div>
+    </div>
+    <div class="panel">
+      <h2>近 14 天访问趋势（PV）</h2>
+      <div class="bars">${bars}</div>
+      <div class="legend">柱高 = 当日 PV 相对峰值；鼠标无需操作，数据为北京时间每日累计</div>
+    </div>
+    <div class="two">
+      <div class="panel"><h2>热门页面</h2><div class="list">${pathRows}</div></div>
+      <div class="panel"><h2>访客国家/地区</h2><div class="list">${coRows}</div></div>
+    </div>
+    <div class="panel"><h2>设备分布</h2><div class="list">${devRows}</div></div>
+  `;
+}
+load();
+</script>
+</body>
+</html>
