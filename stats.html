@@ -56,6 +56,10 @@
   .live-row .spacer{flex:1;}
   .ago{font-size:11px;color:var(--sub);flex:none;}
   .ago b{color:var(--green);font-weight:700;}
+  .filewarn{background:var(--card);border:1px solid var(--red);border-radius:14px;padding:22px;margin-bottom:22px;}
+  .filewarn h3{font-size:14px;color:var(--red);margin-bottom:10px;}
+  .filewarn p{font-size:12px;color:var(--sub);line-height:1.8;margin-bottom:12px;}
+  .filewarn a{display:inline-block;background:var(--red);color:#fff;border-radius:8px;padding:8px 16px;font-size:13px;text-decoration:none;font-weight:700;}
   @media(max-width:640px){ .grid4{grid-template-columns:repeat(2,1fr);} .two{grid-template-columns:1fr;}
     .livebar .num{font-size:34px;} .livebar .right{text-align:left;} }
 </style>
@@ -68,82 +72,102 @@
 </div>
 
 <script>
-const KEY_STORE = 'pc_stats_key';
+const KEY_STORE='pc_stats_key';
+const APP_URL='https://pixelcut-studio.pages.dev/stats';
 function askKey(){
-  let k = sessionStorage.getItem(KEY_STORE);
-  if(!k){ k = prompt('请输入统计口令（默认 pixelcut2026）：') || ''; if(k) sessionStorage.setItem(KEY_STORE,k); }
+  let k=sessionStorage.getItem(KEY_STORE);
+  if(!k){ k=prompt('请输入统计口令（默认 pixelcut2026）：')||''; if(k) sessionStorage.setItem(KEY_STORE,k); }
   return k;
 }
+
+// file:// 协议下 fetch 跨域受限，直接给出明确提示
+if(location.protocol==='file:'){
+  document.getElementById('app').innerHTML=
+    '<div class="filewarn"><h3>请通过 HTTPS 链接打开本页面</h3>'+
+    '<p>本地双击打开 stats.html 时，浏览器会把它当成 file:// 文件。<br>'+
+    '出于安全限制，file:// 文件不能调用 https:// 接口，所以出现 "Failed to fetch"。</p>'+
+    '<p>正确打开方式：'+APP_URL+'</p>'+
+    '<a href="'+APP_URL+'" target="_blank">点我在线打开</a></div>';
+  throw new Error('file protocol not supported');
+}
+
 const DEV_NAME={mobile:'手机',tablet:'平板',desktop:'电脑'};
 function fmtAgo(s){ if(s<60) return s+'秒前'; if(s<3600) return Math.floor(s/60)+'分钟前'; return Math.floor(s/3600)+'小时前'; }
 function fmtDur(s){ if(s<60) return '<1分钟'; if(s<3600) return Math.floor(s/60)+'分钟'; return Math.floor(s/3600)+'小时'+Math.floor((s%3600)/60)+'分'; }
 
 let TIMER=null;
 async function load(first){
-  let key = askKey();
-  if(!key){ document.getElementById('app').innerHTML='<div class="err">未输入口令</div>'; return; }
+  let key=askKey();
+  const app=document.getElementById('app');
+  if(!key){ app.innerHTML='<div class="err">未输入口令</div>'; return; }
   try{
-    const r = await fetch('/api/stats',{headers:{'x-stats-key':key}});
-    if(r.status===401){ sessionStorage.removeItem(KEY_STORE); if(TIMER)clearInterval(TIMER); document.getElementById('app').innerHTML='<div class="err">口令错误，刷新重试</div>'; return; }
-    const d = await r.json();
-    if(first) render(d);   // 首次整体渲染
-    updateLive(d);         // 只刷新"实时在线"区块，避免整页闪烁
-  }catch(e){ if(first) document.getElementById('app').innerHTML='<div class="err">加载失败：'+e.message+'</div>'; }
+    const r=await fetch('/api/stats',{headers:{'x-stats-key':key}});
+    if(r.status===401){ sessionStorage.removeItem(KEY_STORE); if(TIMER)clearInterval(TIMER); app.innerHTML='<div class="err">口令错误，刷新重试</div>'; return; }
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(first) render(d);
+    updateLive(d);
+  }catch(e){
+    if(first){
+      const isCors = e.name==='TypeError' || e.message.includes('Failed to fetch');
+      app.innerHTML='<div class="err">加载失败：'+e.message+'<br><span style="color:var(--sub);font-size:12px">'+
+        (isCors?'常见原因：用 file:// 双击打开 / 网络受限 / 口令过期':'')+
+        '</span><br><a href="'+APP_URL+'" style="color:var(--blue);font-size:12px">'+APP_URL+'</a></div>';
+    }
+  }
 }
 function startAuto(){ if(TIMER)clearInterval(TIMER); TIMER=setInterval(function(){ load(false); },30000); }
 
 function updateLive(d){
-  const o = d.online || {count:0,list:[],paths:{},countries:{},devices:{}};
-  const numEl = document.getElementById('liveNum');
+  const o=d.online||{count:0,list:[],paths:{},countries:{},devices:{}};
+  const numEl=document.getElementById('liveNum');
   if(!numEl) return;
 
-  numEl.textContent = o.count;
+  numEl.textContent=o.count;
 
-  // 在线访客构成小结（页面 / 国家 各取前 3）
-  const ps = topObj(o.paths,3).map(x=>x[0]+' ×'+x[1]).join('　');
-  const cs = topObj(o.countries,3).map(x=>(x[0]==='XX'?'未知':x[0])+' ×'+x[1]).join('　');
-  document.getElementById('liveBreak').innerHTML =
-    (o.count===0 ? '<span style="color:var(--sub)">当前没有访客在站上</span>'
-                 : (ps? '📄 '+ps+'<br>':'') + (cs? '🌍 '+cs:'')) || '<span style="color:var(--sub)">当前没有访客在站上</span>';
+  const ps=topObj(o.paths,3).map(x=>x[0]+' ×'+x[1]).join('　');
+  const cs=topObj(o.countries,3).map(x=>(x[0]==='XX'?'未知':x[0])+' ×'+x[1]).join('　');
+  document.getElementById('liveBreak').innerHTML=
+    (o.count===0?'<span style="color:var(--sub)">当前没有访客在站上</span>'
+                 :(ps?'📄 '+ps+'<br>':'')+(cs?'🌍 '+cs:''))||'<span style="color:var(--sub)">当前没有访客在站上</span>';
 
-  const listEl = document.getElementById('liveList');
+  const listEl=document.getElementById('liveList');
   if(o.count===0){
     listEl.innerHTML='<div class="err" style="padding:12px">暂无在线访客</div>';
   }else{
-    listEl.innerHTML = o.list.map(function(v){
+    listEl.innerHTML=o.list.map(function(v){
       return '<div class="live-row">'
-        + '<span class="tag path">'+v.path+'</span>'
-        + '<span class="tag co">'+(v.country==='XX'?'未知':v.country)+'</span>'
-        + '<span class="tag dv">'+(DEV_NAME[v.device]||v.device)+'</span>'
-        + '<span class="spacer"></span>'
-        + '<span class="ago">停留 '+fmtDur(v.duration)+' · <b>'+fmtAgo(v.ago)+'</b></span>'
-        + '</div>';
+        +'<span class="tag path">'+v.path+'</span>'
+        +'<span class="tag co">'+(v.country==='XX'?'未知':v.country)+'</span>'
+        +'<span class="tag dv">'+(DEV_NAME[v.device]||v.device)+'</span>'
+        +'<span class="spacer"></span>'
+        +'<span class="ago">停留 '+fmtDur(v.duration)+' · <b>'+fmtAgo(v.ago)+'</b></span>'
+        +'</div>';
     }).join('');
   }
-  document.getElementById('liveTime').textContent =
-    new Date().toLocaleTimeString('zh-CN',{hour12:false});
+  document.getElementById('liveTime').textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false});
 }
 function topObj(o,n){ return Object.entries(o||{}).sort((a,b)=>b[1]-a[1]).slice(0,n); }
 function render(d){
-  const last14 = d.days.slice(-14);
-  const maxPv = Math.max(1,...last14.map(x=>x.pv));
-  const bars = last14.map(x=>{
-    const h = Math.round((x.pv/maxPv)*100);
-    const mm = x.date.slice(5);
+  const last14=d.days.slice(-14);
+  const maxPv=Math.max(1,...last14.map(x=>x.pv));
+  const bars=last14.map(x=>{
+    const h=Math.round((x.pv/maxPv)*100);
+    const mm=x.date.slice(5);
     return `<div class="b"><div class="bar" style="height:${h}%"></div><div class="lab">${mm}</div></div>`;
   }).join('');
-  const tp = topObj(d.paths,8); const co = topObj(d.countries,8); const dv = d.devices||{};
-  const maxPath = Math.max(1,...tp.map(x=>x[1]));
-  const maxCo = Math.max(1,...co.map(x=>x[1]));
-  const pathRows = tp.length? tp.map(([p,c])=>`<div class="row"><span class="name">${p}</span><span class="meter"><i style="width:${Math.round(c/maxPath*100)}%"></i></span><span class="num">${c}</span></div>`).join('') : '<div class="err">暂无数据</div>';
-  const coRows = co.length? co.map(([c,n])=>`<div class="row"><span class="name">${c==='XX'?'未知':c}</span><span class="meter"><i style="width:${Math.round(n/maxCo*100)}%"></i></span><span class="num">${n}</span></div>`).join('') : '<div class="err">暂无数据</div>';
-  const devTotal = (dv.mobile||0)+(dv.desktop||0)+(dv.tablet||0)||1;
-  const devRows = ['mobile','tablet','desktop'].map(k=>{
+  const tp=topObj(d.paths,8); const co=topObj(d.countries,8); const dv=d.devices||{};
+  const maxPath=Math.max(1,...tp.map(x=>x[1]));
+  const maxCo=Math.max(1,...co.map(x=>x[1]));
+  const pathRows=tp.length? tp.map(([p,c])=>`<div class="row"><span class="name">${p}</span><span class="meter"><i style="width:${Math.round(c/maxPath*100)}%"></i></span><span class="num">${c}</span></div>`).join('') : '<div class="err">暂无数据</div>';
+  const coRows=co.length? co.map(([c,n])=>`<div class="row"><span class="name">${c==='XX'?'未知':c}</span><span class="meter"><i style="width:${Math.round(n/maxCo*100)}%"></i></span><span class="num">${n}</span></div>`).join('') : '<div class="err">暂无数据</div>';
+  const devTotal=(dv.mobile||0)+(dv.desktop||0)+(dv.tablet||0)||1;
+  const devRows=['mobile','tablet','desktop'].map(k=>{
     const n=dv[k]||0; const label={mobile:'手机',tablet:'平板',desktop:'电脑'}[k];
     return `<div class="row"><span class="name">${label}</span><span class="meter"><i style="width:${Math.round(n/devTotal*100)}%"></i></span><span class="num">${n}</span></div>`;
   }).join('');
 
-  document.getElementById('app').innerHTML = `
+  document.getElementById('app').innerHTML=`
     <div class="livebar">
       <div class="left">
         <span class="pulse"><i></i><i></i></span>
