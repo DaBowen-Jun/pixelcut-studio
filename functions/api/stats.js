@@ -59,7 +59,14 @@ export async function onRequestGet({ request, env }) {
       if (!raw) continue;
       const obj = JSON.parse(raw);
       for (const u in obj) {
-        if (!liveMap[u] || obj[u].ts > liveMap[u].ts) liveMap[u] = obj[u];
+        const v = obj[u];
+        const cur = liveMap[u];
+        if (!cur) { liveMap[u] = Object.assign({}, v); continue; }
+        // 跨分钟桶合并：活动信息取最新的一次，首次时间取最早的一次，
+        // 这样访客跨桶停留时，"停留时长"才不会被重置归零。
+        if (v.ts > cur.ts) { cur.ts = v.ts; cur.path = v.path; cur.country = v.country; cur.device = v.device; }
+        const fv = v.first || v.ts;
+        if (fv < (cur.first || cur.ts)) cur.first = fv;
       }
     } catch { /* 忽略单个桶读取失败 */ }
   }
