@@ -50,8 +50,45 @@ export async function onRequestGet({ request, env }) {
     }
   }
 
+  // ---- 实时在线：合并最近 5 个分钟桶，去重 uid ----
+  const nowMinute = Math.floor(Date.now() / 60000);
+  const liveMap = {};
+  for (let i = 0; i < 5; i++) {
+    try {
+      const raw = await env.BUCKET.get('live:' + (nowMinute - i));
+      if (!raw) continue;
+      const obj = JSON.parse(raw);
+      for (const u in obj) {
+        if (!liveMap[u] || obj[u].ts > liveMap[u].ts) liveMap[u] = obj[u];
+      }
+    } catch { /* 忽略单个桶读取失败 */ }
+  }
+  const onlineUsers = Object.values(liveMap);
+  const oPaths = {}, oCountries = {}, oDevices = {};
+  onlineUsers.forEach((v) => {
+    oPaths[v.path] = (oPaths[v.path] || 0) + 1;
+    oCountries[v.country] = (oCountries[v.country] || 0) + 1;
+    oDevices[v.device] = (oDevices[v.device] || 0) + 1;
+  });
+  const online = {
+    count: onlineUsers.length,
+    paths: oPaths,
+    countries: oCountries,
+    devices: oDevices,
+    list: onlineUsers
+      .sort((a, b) => b.ts - a.ts)
+      .slice(0, 20)
+      .map((v) => ({
+        path: v.path,
+        country: v.country,
+        device: v.device,
+        ago: Math.round((Date.now() - v.ts) / 1000),      // 多少秒前活动
+        duration: Math.round((v.ts - (v.first || v.ts)) / 1000), // 停留秒数
+      })),
+  };
+
   return new Response(
-    JSON.stringify({ today, windowPv, windowUv: windowUvSet.size, days: series, paths, countries, devices }),
+    JSON.stringify({ today, windowPv, windowUv: windowUvSet.size, days: series, paths, countries, devices, online, serverTime: Date.now() }),
     { headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' } }
   );
 }

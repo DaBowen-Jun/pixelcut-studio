@@ -664,17 +664,27 @@
 
   <script src="app.js"></script>
 
-  <!-- 访问统计埋点（自有 KV，fire-and-forget） -->
+  <!-- 访问统计埋点 + 在线心跳（自有 KV，fire-and-forget） -->
   <script>
     (function () {
-      try {
-        fetch('/api/visit', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ path: location.pathname }),
-          keepalive: true
-        });
-      } catch (e) { /* 忽略 */ }
+      // hb=1 表示心跳：只刷新"最后活跃时间"用于统计在线人数，不重复计入 PV
+      function beat(hb) {
+        try {
+          fetch('/api/visit', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ path: location.pathname, hb: hb ? 1 : 0 }),
+            keepalive: true
+          });
+        } catch (e) { /* 忽略 */ }
+      }
+      beat(false);                 // 首次 = 一次真实 PV
+      setInterval(function () {
+        if (document.visibilityState === 'visible') beat(true);  // 页面在后台就不发心跳
+      }, 30000);
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') beat(true);  // 切回前台立刻报一次
+      });
     })();
   </script>
 </body>

@@ -36,23 +36,47 @@ export async function onRequestPost({ request, env }) {
     setCookie = 'pc_uid=' + uid + '; Max-Age=31536000; Path=/; SameSite=Lax';
   }
 
-  const key = 'stats:' + dayKey(new Date());
-  let rec = { pv: 0, uvs: [], paths: {}, countries: {}, devices: {} };
-  try {
-    const raw = await env.BUCKET.get(key);
-    if (raw) rec = JSON.parse(raw);
-  } catch { /* 首次为空 */ }
+  // hb=1 为在线心跳：只刷新在线状态，不重复计入 PV/UV/路径等日统计
+  const isHeartbeat = payload.hb === 1 || payload.hb === true;
 
-  rec.pv = (rec.pv || 0) + 1;
-  if (!rec.uvs.includes(uid)) {
-    rec.uvs.push(uid);
-    if (rec.uvs.length > 8000) rec.uvs = rec.uvs.slice(-8000); // 安全阀
+  if (!isHeartbeat) {
+    const key = 'stats:' + dayKey(new Date());
+    let rec = { pv: 0, uvs: [], paths: {}, countries: {}, devices: {} };
+    try {
+      const raw = await env.BUCKET.get(key);
+      if (raw) rec = JSON.parse(raw);
+    } catch { /* 首次为空 */ }
+
+    rec.pv = (rec.pv || 0) + 1;
+    if (!rec.uvs.includes(uid)) {
+      rec.uvs.push(uid);
+      if (rec.uvs.length > 8000) rec.uvs = rec.uvs.slice(-8000); // 安全阀
+    }
+    rec.paths[path] = (rec.paths[path] || 0) + 1;
+    rec.countries[country] = (rec.countries[country] || 0) + 1;
+    rec.devices[device] = (rec.devices[device] || 0) + 1;
+
+    await env.BUCKET.put(key, JSON.stringify(rec));
   }
-  rec.paths[path] = (rec.paths[path] || 0) + 1;
-  rec.countries[country] = (rec.countries[country] || 0) + 1;
-  rec.devices[device] = (rec.devices[device] || 0) + 1;
 
-  await env.BUCKET.put(key, JSON.stringify(rec));
+  // 实时在线：按"分钟桶"分桶写入 KV，TTL 1 小时自动清理。
+  // 分桶的目的：避免所有访客频繁争抢写同一个 key 导致互相覆盖。
+  try {
+    const bucket = Math.floor(Date.now() / 60000);
+    const liveKey = 'live:' + bucket;
+    let live = {};
+    try {
+      const lraw = await env.BUCKET.get(liveKey);
+      if (lraw) live = JSON.parse(lraw);
+    } catch { /* 该分钟桶首次写入 */ }
+    const prev = live[uid];
+    live[uid] = {
+      ts: Date.now(),
+      first: prev ? prev.first : Date.now(), // 首次出现时间，用于算停留时长
+      path, country, device,
+    };
+    await env.BUCKET.put(liveKey, JSON.stringify(live), { expirationTtl: 3600 });
+  } catch { /* 在线统计失败不影响主统计 */ }
 
   const headers = { 'content-type': 'application/json', 'access-control-allow-origin': '*' };
   if (setCookie) headers['set-cookie'] = setCookie;

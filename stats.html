@@ -33,7 +33,31 @@
   .meter i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),#6ad0ff);border-radius:5px;}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
   .err{color:#ff6b6b;font-size:13px;padding:20px;text-align:center;}
-  @media(max-width:640px){ .grid4{grid-template-columns:repeat(2,1fr);} .two{grid-template-columns:1fr;} }
+  /* ---- 实时在线 ---- */
+  .livebar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    background:linear-gradient(135deg,#1d2233,#181b29);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;margin-bottom:22px;}
+  .livebar .left{display:flex;align-items:center;gap:16px;}
+  .pulse{position:relative;width:14px;height:14px;flex:none;}
+  .pulse i{position:absolute;inset:0;background:var(--green);border-radius:50%;}
+  .pulse i:first-child{animation:ping 1.8s cubic-bezier(0,0,.2,1) infinite;}
+  @keyframes ping{ 0%{transform:scale(1);opacity:.8} 80%,100%{transform:scale(2.6);opacity:0} }
+  .livebar .num{font-size:42px;font-weight:800;color:var(--green);line-height:1;}
+  .livebar .txt{font-size:12px;color:var(--sub);line-height:1.5;}
+  .livebar .txt b{color:var(--txt);font-size:13px;display:block;margin-bottom:2px;}
+  .livebar .right{font-size:11px;color:var(--sub);text-align:right;line-height:1.7;}
+  .refresh{background:#22263a;border:1px solid var(--line);color:var(--txt);border-radius:8px;
+    padding:5px 11px;font-size:11px;cursor:pointer;font-family:inherit;}
+  .refresh:hover{border-color:var(--blue);color:var(--blue);}
+  .live-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px;flex-wrap:wrap;}
+  .live-row:last-child{border-bottom:none;}
+  .tag{font-size:11px;padding:2px 8px;border-radius:20px;background:#22263a;color:var(--sub);flex:none;}
+  .tag.path{color:var(--blue);} .tag.co{color:var(--gold);} .tag.dv{color:var(--green);}
+  .live-row .spacer{flex:1;}
+  .ago{font-size:11px;color:var(--sub);flex:none;}
+  .ago b{color:var(--green);font-weight:700;}
+  @media(max-width:640px){ .grid4{grid-template-columns:repeat(2,1fr);} .two{grid-template-columns:1fr;}
+    .livebar .num{font-size:34px;} .livebar .right{text-align:left;} }
 </style>
 </head>
 <body>
@@ -50,15 +74,54 @@ function askKey(){
   if(!k){ k = prompt('请输入统计口令（默认 pixelcut2026）：') || ''; if(k) sessionStorage.setItem(KEY_STORE,k); }
   return k;
 }
-async function load(){
+const DEV_NAME={mobile:'手机',tablet:'平板',desktop:'电脑'};
+function fmtAgo(s){ if(s<60) return s+'秒前'; if(s<3600) return Math.floor(s/60)+'分钟前'; return Math.floor(s/3600)+'小时前'; }
+function fmtDur(s){ if(s<60) return '<1分钟'; if(s<3600) return Math.floor(s/60)+'分钟'; return Math.floor(s/3600)+'小时'+Math.floor((s%3600)/60)+'分'; }
+
+let TIMER=null;
+async function load(first){
   let key = askKey();
   if(!key){ document.getElementById('app').innerHTML='<div class="err">未输入口令</div>'; return; }
   try{
     const r = await fetch('/api/stats',{headers:{'x-stats-key':key}});
-    if(r.status===401){ sessionStorage.removeItem(KEY_STORE); document.getElementById('app').innerHTML='<div class="err">口令错误，刷新重试</div>'; return; }
+    if(r.status===401){ sessionStorage.removeItem(KEY_STORE); if(TIMER)clearInterval(TIMER); document.getElementById('app').innerHTML='<div class="err">口令错误，刷新重试</div>'; return; }
     const d = await r.json();
-    render(d);
-  }catch(e){ document.getElementById('app').innerHTML='<div class="err">加载失败：'+e.message+'</div>'; }
+    if(first) render(d);   // 首次整体渲染
+    updateLive(d);         // 只刷新"实时在线"区块，避免整页闪烁
+  }catch(e){ if(first) document.getElementById('app').innerHTML='<div class="err">加载失败：'+e.message+'</div>'; }
+}
+function startAuto(){ if(TIMER)clearInterval(TIMER); TIMER=setInterval(function(){ load(false); },30000); }
+
+function updateLive(d){
+  const o = d.online || {count:0,list:[],paths:{},countries:{},devices:{}};
+  const numEl = document.getElementById('liveNum');
+  if(!numEl) return;
+
+  numEl.textContent = o.count;
+
+  // 在线访客构成小结（页面 / 国家 各取前 3）
+  const ps = topObj(o.paths,3).map(x=>x[0]+' ×'+x[1]).join('　');
+  const cs = topObj(o.countries,3).map(x=>(x[0]==='XX'?'未知':x[0])+' ×'+x[1]).join('　');
+  document.getElementById('liveBreak').innerHTML =
+    (o.count===0 ? '<span style="color:var(--sub)">当前没有访客在站上</span>'
+                 : (ps? '📄 '+ps+'<br>':'') + (cs? '🌍 '+cs:'')) || '<span style="color:var(--sub)">当前没有访客在站上</span>';
+
+  const listEl = document.getElementById('liveList');
+  if(o.count===0){
+    listEl.innerHTML='<div class="err" style="padding:12px">暂无在线访客</div>';
+  }else{
+    listEl.innerHTML = o.list.map(function(v){
+      return '<div class="live-row">'
+        + '<span class="tag path">'+v.path+'</span>'
+        + '<span class="tag co">'+(v.country==='XX'?'未知':v.country)+'</span>'
+        + '<span class="tag dv">'+(DEV_NAME[v.device]||v.device)+'</span>'
+        + '<span class="spacer"></span>'
+        + '<span class="ago">停留 '+fmtDur(v.duration)+' · <b>'+fmtAgo(v.ago)+'</b></span>'
+        + '</div>';
+    }).join('');
+  }
+  document.getElementById('liveTime').textContent =
+    new Date().toLocaleTimeString('zh-CN',{hour12:false});
 }
 function topObj(o,n){ return Object.entries(o||{}).sort((a,b)=>b[1]-a[1]).slice(0,n); }
 function render(d){
@@ -81,6 +144,23 @@ function render(d){
   }).join('');
 
   document.getElementById('app').innerHTML = `
+    <div class="livebar">
+      <div class="left">
+        <span class="pulse"><i></i><i></i></span>
+        <span class="num" id="liveNum">0</span>
+        <span class="txt"><b>实时在线人数</b>最近 5 分钟内有活动的独立访客</span>
+      </div>
+      <div class="right">
+        <div>更新于 <span id="liveTime">--:--:--</span></div>
+        <button class="refresh" onclick="load(false)">立即刷新</button>
+        <span>每 30 秒自动更新</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>🟢 在线访客明细</h2>
+      <div id="liveBreak" style="font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.8">加载中…</div>
+      <div id="liveList"></div>
+    </div>
     <div class="grid4">
       <div class="card c1"><div class="k">今日 PV</div><div class="v">${d.today.pv}</div></div>
       <div class="card c2"><div class="k">今日 UV</div><div class="v">${d.today.uv}</div></div>
@@ -99,7 +179,8 @@ function render(d){
     <div class="panel"><h2>设备分布</h2><div class="list">${devRows}</div></div>
   `;
 }
-load();
+load(true);
+startAuto();
 </script>
 </body>
 </html>
